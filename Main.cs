@@ -166,6 +166,10 @@ namespace FraggleExpansion
                     {
                         Drawable._painterMaxSize = new Vector3(100000, 100000, 100000);
                     }
+                    if (FraggleExpansionData.GhostBlocks)
+                    {
+                        Drawable.DrawableDepthMaxIncrements = 100000;
+                    }
                 }
 
                 if (Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>())
@@ -174,14 +178,14 @@ namespace FraggleExpansion
                     DrawableWallSurface._useBetaWalls = FraggleExpansionData.BetaWalls && ThemeManager.CurrentThemeData.ID != "THEME_RETRO";
                 }
 
-                if (Prefab.name == "POD_SpawnBasket_Vanilla")
+                /*if (Prefab.name == "POD_SpawnBasket_Vanilla")
                 {
                     var ParameterComponent = Prefab.GetComponent<LevelEditorCarryTypeParameter>();
                     foreach (var CarryType in ParameterComponent._carryTypes)
                     {
                         CarryType.CarryPrefab.GetComponent<COMMON_SelfRespawner>()._respawnTriggerY = -120;
                     }
-                }
+                }*/
 
                 if (Placeable.name == "POD_Rule_Floor_Start_Survival")
                 {

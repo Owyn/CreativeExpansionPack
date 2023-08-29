@@ -91,6 +91,11 @@ namespace FraggleExpansion
                         FraggleExpansionData.InsanePainterSize = ResultAsBoolean;
                         break;
 
+                    case "ghostblocks":
+                        ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.GhostBlocks);
+                        FraggleExpansionData.GhostBlocks = ResultAsBoolean;
+                        break;
+
                     case "addunusedobjects":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.AddUnusedObjects);
                         FraggleExpansionData.AddUnusedObjects = ResultAsBoolean;
@@ -150,7 +155,7 @@ namespace FraggleExpansion
     {
 
         // True booleans
-        public static bool AddUnusedObjects, InsanePainterSize ,CustomTestMusic, RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, BetaWalls, DisplayLevel, UseMainSkinInExploreState = true;
+        public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, CustomTestMusic, RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, BetaWalls, DisplayLevel, UseMainSkinInExploreState = true;
         public static bool LetFirstTimePopUpHappen = true;
         public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
         public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
