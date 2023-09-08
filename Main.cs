@@ -89,11 +89,13 @@ namespace FraggleExpansion
 
             if (FraggleExpansionData.AddUnusedObjects)
             {
-                if(ThemeManager.CurrentThemeData.ID == "THEME_RETRO")
-                AddObjectToCurrentList("placeable_obstacle_spinningbeamshort_retro_large", LevelEditorPlaceableObject.Category.MovingSurfaces, 2, 838);
-                AddObjectToCurrentList("placeable_special_goo_slide_large", LevelEditorPlaceableObject.Category.Platforms, 2, 261);
-                
-            }
+                //Log.LogMessage("Objects to add: " + FraggleExpansionData.AddObjectData.Length);
+                foreach (string sData in FraggleExpansionData.AddObjectData)
+                {
+                    //Log.LogMessage("Adding object: " + sData);
+                    AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced, 0, 0);
+                }
+               }
             if (ThemeManager.CurrentThemeData.ID == "THEME_RETRO" && GameModeManager.CurrentGameModeData.ID == "GAMEMODE_SURVIVAL")
                 AddObjectToCurrentList("placeable_rule_floorstart_survival_large", LevelEditorPlaceableObject.Category.Platforms, 2, 172);
 

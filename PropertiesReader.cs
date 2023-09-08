@@ -99,6 +99,7 @@ namespace FraggleExpansion
                     case "addunusedobjects":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.AddUnusedObjects);
                         FraggleExpansionData.AddUnusedObjects = ResultAsBoolean;
+                        ReadObjectsToAddData();
                         break;
 
                     case "musiceventplaymode":
@@ -121,6 +122,14 @@ namespace FraggleExpansion
                 }
 
             }
+        }
+
+        public void ReadObjectsToAddData()
+        {
+            string FilePath =
+            Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\Object_Data.txt");
+            if (!File.Exists(FilePath)) { Application.Quit(); return; }
+            FraggleExpansionData.AddObjectData = File.ReadAllLines(FilePath);
         }
 
         public static void WriteFirstTimePopUpGone(string Prop)
@@ -153,12 +162,11 @@ namespace FraggleExpansion
 
     public struct FraggleExpansionData
     {
-
         // True booleans
         public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, CustomTestMusic, RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, BetaWalls, DisplayLevel, UseMainSkinInExploreState = true;
         public static bool LetFirstTimePopUpHappen = true;
         public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
         public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
-
+        public static string[] AddObjectData;
     }
 }
