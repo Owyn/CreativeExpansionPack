@@ -1,4 +1,4 @@
-# Creative Expansion Pack
+# Creative Expansion Pack 2
 
 ![image](https://github.com/kota69th/CreativeExpansionPack/assets/104696918/44440c15-26de-4a5d-bab6-451845ef5f71)
 > A Fall Guys mod meant to improve Fall Guys Creative.
