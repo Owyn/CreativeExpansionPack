@@ -31,7 +31,9 @@ I can't play normal Fall Guys when Creative Expansion Pack is installed, how to 
 
 ## Installation Guide 
 
- 1. Download the latest release [here](https://github.com/kota69th/CreativeExpansionPack/releases/tag/stable).
+ 1. Download the latest release of CEP1 [here](https://github.com/kota69th/CreativeExpansionPack/releases/tag/stable).
+
+ 1.5. also download CEP2 update above it ( https://github.com/Owyn/CreativeExpansionPack/releases )
  
  2. Drop everything within the .zip file in the the zip file into your game's root,
  
