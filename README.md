@@ -1,4 +1,4 @@
-# Creative Expansion Pack 2
+# Creative Expansion Pack CE (Community Edition)
 
 ![image](https://github.com/kota69th/CreativeExpansionPack/assets/104696918/44440c15-26de-4a5d-bab6-451845ef5f71)
 > A Fall Guys mod meant to improve Fall Guys Creative.
@@ -33,7 +33,7 @@ I can't play normal Fall Guys when Creative Expansion Pack is installed, how to 
 
  1. Download the latest release of CEP1 [here](https://github.com/kota69th/CreativeExpansionPack/releases/tag/stable).
 
- 1.5. also download CEP2 update above it ( https://github.com/Owyn/CreativeExpansionPack/releases )
+ 1.5. also download CEP CEP (this) update above it ( https://github.com/Owyn/CreativeExpansionPack/releases )
  
  2. Drop everything within the .zip file in the the zip file into your game's root,
  
