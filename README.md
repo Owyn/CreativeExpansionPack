@@ -6,6 +6,12 @@
 
 ## Questions and Answers
 
+**How is CEP CE different from just CEP?**
+
+> - You can build digital objects in original maps for example with its custom buildable object list - you can also sort it however you want and add\remove items into it
+> - Ghost Block support (advanced feature, a bit complex to use) with an ingame hotkey to toggle it ON and OFF (F4 hotkey)
+> - Unity Explorer is bundled together with it
+
 How is Creative Expansion Pack made?
 > Creative Expansion Pack is made using BepinEx, a modding framework for games made with Unity.
 
@@ -18,10 +24,10 @@ Is Creative Expansion Pack against Fall Guys' EULA?
 > However, PLEASE MAKE GOOD USE OF CREATIVE EXPANSION PACK!!! This mod is clearly not a joke and has mad power over Fall Guys Creative, and everyone knows that with great power comes great responsibility.
 
 What features does Creative Expansion Pack include?
-> A lot, try it out for yourself!
+> A lot, try it out for yourself! Also see `\BepinEx\plugins\CreativeExpansionPack\ExpansionData.txt` config file for settings and some explanations
 
 How do the others scale obstacles?
-> Scaling objects in currently not part of Creative Expansion Pack's feature set, tools used to scale objects will not be mentionned here however.
+> Scaling objects is part of Unity Explorer's feature set, it is now bundled together with this - use F3 hotkey to its menu.
 
 Is there a discord for this mod?
 > Since a public link for original CEP1' discord doesn't exist anymore, you can join my Fall Guys **Map Making discord**: https://discord.com/invite/jXBFcwqtn3 
@@ -31,9 +37,7 @@ I can't play normal Fall Guys when Creative Expansion Pack is installed, how to 
 
 ## Installation Guide 
 
- 1. Download the latest release of CEP1 [here](https://github.com/kota69th/CreativeExpansionPack/releases/tag/stable).
-
- 1.5. also download CEP CEP (this) update above it ( https://github.com/Owyn/CreativeExpansionPack/releases )
+ 1. Download the latest release of CEP CE https://github.com/Owyn/CreativeExpansionPack/releases 
  
  2. Drop everything within the .zip file in the the zip file into your game's root,
  
@@ -41,14 +45,14 @@ I can't play normal Fall Guys when Creative Expansion Pack is installed, how to 
  
  4. Enjoy! Mind that the first boot might take some time...
 
-## Uninstallation Guide 
+## Uninstallation (Turning OFF) Guide 
 
 1. Go to your game's root,
 
 2. Run the Restore_EAC batch file, if you want to go back to Expansion Pack just run Install_BepinEx again.
 
 ## Credits
-> kota69th, since I created the mod (no shit)
+> kota69th, since he created the mod
 
 > sinai for making UnityExplorer (brought mad help during the mod's dev.)
 
