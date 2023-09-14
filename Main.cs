@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
@@ -172,6 +172,10 @@ namespace FraggleExpansion
                     {
                         Drawable.DrawableDepthMaxIncrements = 100000;
                     }
+                    else
+                    {
+                        Drawable.DrawableDepthMaxIncrements = 20;
+                    }
                 }
 
                 if (Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>())
@@ -300,7 +304,13 @@ namespace FraggleExpansion
 
         public void OnUpdate()
         {
-             if(Input.GetKeyDown(KeyCode.End))
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                FraggleExpansionData.GhostBlocks = !FraggleExpansionData.GhostBlocks;
+                Il2CppSystem.Nullable<EventInstance> AudioEvent = AudioManager.CreateAudioEvent("SFX_Emote_ExpressiveDance");
+                AudioEvent.Value.start();
+            }
+             if (Input.GetKeyDown(KeyCode.End))
              if(FraggleCommonManager.Instance.IsInLevelEditor)
              if(!LevelEditorManager.Instance.IsInLevelEditorState<LevelEditorStateMenus>() && !LevelEditorManager.Instance.IsInLevelEditorState<LevelEditorStateTest>() && !LevelEditorManager.Instance.IsInLevelEditorState<LevelEditorStateExplore>())
                  LevelEditorManager.Instance.ReplaceCurrentLevelEditorState(new LevelEditorStateMenus(LevelEditorManager.Instance, false, false).Cast<ILevelEditorState>());
