@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/*using UnityEngine;
 using UnhollowerRuntimeLib;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
@@ -9,10 +9,8 @@ namespace FraggleExpansion
     {
         public static ExplorerBehaver Instance;
 
-        /*
-         * Message from kota:
-         * The SceneLoad += Action alternative is totally MelonLoader's property.
-         */
+         //* Message from kota:
+         //* The SceneLoad += Action alternative is totally MelonLoader's property.
 
     
 
@@ -35,4 +33,4 @@ namespace FraggleExpansion
             Main.Instance.OnUpdate();
         }
     }
-}
+}*/

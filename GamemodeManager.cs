@@ -1,4 +1,4 @@
-﻿using FG.Common;
+﻿/*using FG.Common;
 using FGClient.UI;
 using FGClient;
 using HarmonyLib;
@@ -39,7 +39,7 @@ namespace FraggleExpansion
             void GetBackToLevelEditor(bool On)
             {
                 MenuUI.gameObject.SetActive(true);
-                LevelEditorManager.Instance.ReplaceCurrentLevelEditorState(new LevelEditorStateReticle(LevelEditorManager.Instance, new Vector3(0, 0, 0)).Cast<ILevelEditorState>());
+                LevelEditorManager.Instance.ReplaceCurrentLevelEditorState(new LevelEditorStateReticle(new Vector3(0, 0, 0), null).Cast<ILevelEditorState>());
                 LevelEditorManager.Instance.Audio.UnpauseBuildMusic();
             }
             Il2CppSystem.Action<bool> ActionOnClick = new System.Action<bool>(GetBackToLevelEditor);
@@ -108,7 +108,7 @@ namespace FraggleExpansion
 
             // Rising Slime by Crispy Squid (amazing icon)
             GameModeSlime.carouselItemData = Data;
-            Data.sprite = Tools.MakeOutAnIcon("https://raw.githubusercontent.com/kota69th/FranticExplorer-Bundles/main/risingslime.png", 1280, 1280);
+            //Data.sprite = Tools.MakeOutAnIcon("https://raw.githubusercontent.com/kota69th/FranticExplorer-Bundles/main/risingslime.png", 1280, 1280);
 
             RisingSlimeGamemode = GameModeSlime;
         }
@@ -138,3 +138,4 @@ namespace FraggleExpansion
         }
     }
 }
+*/

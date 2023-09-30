@@ -23,7 +23,7 @@ namespace FraggleExpansion
             return null;
         }
 
-        public static Sprite MakeOutAnIcon(string Link, int Width, int Height)
+        /*public static Sprite MakeOutAnIcon(string Link, int Width, int Height)
         {
             var WebC = new WebClient();
             byte[] ImageAsByte = WebC.DownloadData(Link);
@@ -34,6 +34,6 @@ namespace FraggleExpansion
                 return Sprite.Create(Texture, new Rect(0.0f, 0.0f, Texture.width, Texture.height), new Vector2(0.5f, 0.5f));
             }
             return null;
-        }
+        }*/
     }
 }

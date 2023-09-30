@@ -56,15 +56,15 @@ namespace FraggleExpansion
                         FraggleExpansionData.BypassBounds = ResultAsBoolean;
                         break;
 
-                    case "betawalls":
+                    /*case "betawalls":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.BetaWalls);
                         FraggleExpansionData.BetaWalls = ResultAsBoolean;
-                        break;
+                        break;*/
 
-                    case "displaylevel":
+                    /*case "displaylevel":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.DisplayLevel);
                         FraggleExpansionData.DisplayLevel = ResultAsBoolean;
-                        break;
+                        break;*/
 
                     case "exploreskin":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.UseMainSkinInExploreState);
@@ -81,10 +81,10 @@ namespace FraggleExpansion
                         FraggleExpansionData.CanClipObjects = ResultAsBoolean;
                         break;
 
-                    case "customtestmusic":
+                    /*case "customtestmusic":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.CustomTestMusic);
                         FraggleExpansionData.CustomTestMusic = ResultAsBoolean;
-                        break;
+                        break;*/
 
                     case "insanepaintersize":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.InsanePainterSize);
@@ -102,23 +102,23 @@ namespace FraggleExpansion
                         ReadObjectsToAddData();
                         break;
 
-                    case "musiceventplaymode":
+                    /*case "musiceventplaymode":
                         FraggleExpansionData.MusicEventPlayMode = SplitData[1];
                         break;
 
                     case "musicbankplaymode":
                         FraggleExpansionData.MusicBankPlayMode = SplitData[1];
-                        break;
+                        break;*/
 
 
 
                     // CEP generated and pretty bad, it works tho...
-                    // Do not touch (I know it's bad but still)
+                    // Do not touch (I know it's bad but still) // Imma touch this!
 
-                    case "letfirsttimepopuphappen":
+                    /*case "letfirsttimepopuphappen":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.LetFirstTimePopUpHappen);
                         FraggleExpansionData.LetFirstTimePopUpHappen = ResultAsBoolean;
-                        break;
+                        break;*/
                 }
 
             }
@@ -132,7 +132,7 @@ namespace FraggleExpansion
             FraggleExpansionData.AddObjectData = File.ReadAllLines(FilePath);
         }
 
-        public static void WriteFirstTimePopUpGone(string Prop)
+        /*public static void WriteFirstTimePopUpGone(string Prop)
         {
             if (!FraggleExpansionData.LetFirstTimePopUpHappen) return;
             string FilePath = Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\ExpansionData.txt");
@@ -142,7 +142,7 @@ namespace FraggleExpansion
             {
                 Writer.WriteLine(Prop + ":false");
             }
-        }
+        }*/
 
         public void ReadBool(string Data, ref bool Value, bool BaseResult)
         {
@@ -163,10 +163,10 @@ namespace FraggleExpansion
     public struct FraggleExpansionData
     {
         // True booleans
-        public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, CustomTestMusic, RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, BetaWalls, DisplayLevel, UseMainSkinInExploreState = true;
-        public static bool LetFirstTimePopUpHappen = true;
-        public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
-        public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
+        public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, /*CustomTestMusic,*/ RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, /*BetaWalls, DisplayLevel,*/ UseMainSkinInExploreState = true;
+        //public static bool LetFirstTimePopUpHappen = true;
+        //public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
+        //public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
         public static string[] AddObjectData;
     }
 }
