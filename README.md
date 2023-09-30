@@ -14,7 +14,7 @@
 
 > - You can build digital objects in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
 > - Ghost Block support (advanced feature, a bit complex to use) with an ingame hotkey to toggle it ON and OFF (F4 hotkey - hold it during map loading)
-> - Unity Explorer is bundled together with it to scale objects and position them precisely
+> - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
 > - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
 
 **What features does Creative Expansion Pack include?**
