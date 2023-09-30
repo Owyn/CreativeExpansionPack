@@ -1,4 +1,4 @@
-# Creative Expansion Pack CE (Community Edition)
+# Creative Expansion Pack Community Edition (CEP CE)
 
 ![image](https://github.com/kota69th/CreativeExpansionPack/assets/104696918/44440c15-26de-4a5d-bab6-451845ef5f71)
 > A Fall Guys mod meant to improve Fall Guys Creative.
@@ -6,33 +6,45 @@
 
 ## Questions and Answers
 
+**Is there a discord for this mod?**
+
+> There's my Fall Guys **Map Making discord**: https://discord.com/invite/jXBFcwqtn3 
+
 **How is CEP CE different from just CEP?**
 
-> - You can build digital objects in original maps for example with its custom buildable object list - you can also sort it however you want and add\remove items into it
-> - Ghost Block support (advanced feature, a bit complex to use) with an ingame hotkey to toggle it ON and OFF (F4 hotkey)
-> - Unity Explorer is bundled together with it
+> - You can build digital objects in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
+> - Ghost Block support (advanced feature, a bit complex to use) with an ingame hotkey to toggle it ON and OFF (F4 hotkey - hold it during map loading)
+> - Unity Explorer is bundled together with it to scale objects and position them precisely
+> - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
 
-How is Creative Expansion Pack made?
+**What features does Creative Expansion Pack include?**
+> - removing all mapmaking limits basically: 
+> - - budget limit, 
+> - - object stock limit, 
+> - - object rotation limit, 
+> - - overlapping limit
+> - - max multiselect limit of 20
+> - - limit on the size of checkpoints
+> - - limit of themed objects being tied to the map theme (digital \ original)
+> - - building outside the map bounds area limit
+> - and some additional **features** such as:
+> - - ghost blocks
+> - - display your last position
+> - and even **bugfixes** for the original map editor!:
+> - - floating objects such as signs and arrows no longer move randomly and get saved like that
+
+**How is Creative Expansion Pack made?**
 > Creative Expansion Pack is made using BepinEx, a modding framework for games made with Unity.
 
-Can I get banned for using Creative Expansion Pack?
+**Can I get banned for using Creative Expansion Pack?**
 > There's no reported case of a user of the mod getting banned during its private state, but the mod's creator has no implication if Mediatonic takes any actions on your account due to using the mod, use it at your own risk! With the whole nature of Fall Guys Creative and the implications of the mod, the question of if you can use Creative Expansion Pack is up to how much you value your account, even tho you are very unlikely of having to go through a ban if you play it safe...
 
-Is Creative Expansion Pack against Fall Guys' EULA?
+**Is Creative Expansion Pack against Fall Guys' EULA?**
 > After checking, Creative Expansion Pack **seems** to not **explicitly** be against Fall Guys' EULA, this mod doesn't give you a "competitive advantage" over a player playing a legitimate and unmodified copy of the game.‎
 >
 > However, PLEASE MAKE GOOD USE OF CREATIVE EXPANSION PACK!!! This mod is clearly not a joke and has mad power over Fall Guys Creative, and everyone knows that with great power comes great responsibility.
 
-What features does Creative Expansion Pack include?
-> A lot, try it out for yourself! Also see `\BepinEx\plugins\CreativeExpansionPack\ExpansionData.txt` config file for settings and some explanations
-
-How do the others scale obstacles?
-> Scaling objects is part of Unity Explorer's feature set, it is now bundled together with this - use F3 hotkey to its menu.
-
-Is there a discord for this mod?
-> Since a public link for original CEP1' discord doesn't exist anymore, you can join my Fall Guys **Map Making discord**: https://discord.com/invite/jXBFcwqtn3 
-
-I can't play normal Fall Guys when Creative Expansion Pack is installed, how to deal with that?!
+**I can't play normal Fall Guys when Creative Expansion Pack is installed, how to deal with that?!**
 > You can't, in order to play the normal game you got to uninstall BepinEx, you can do that by using the "Restore_EAC" batch script in your game's root and quickly switch back to the mod by using the "Install_BepinEx" batch script that's in the same folder.
 
 ## Installation Guide 
