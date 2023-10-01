@@ -6,13 +6,19 @@ using UnhollowerBaseLib;
 using UnityEngine;
 using Wushu.Framework.ExtensionMethods;
 using FMODUnity;
+using UnityEngine.SceneManagement;
+using FG.Common.CMS;
+using ScriptableObjects;
+using FG.Common.Loadables;
+using TreeView;
+using LevelEditor;
 
 namespace FraggleExpansion.Patches.Creative
 {
     public class FeaturesPatches
     {
 
-        [HarmonyPatch(typeof(LevelEditorManagerAudio), nameof(LevelEditorManagerAudio.StartGameplayMusic)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorManagerAudio), nameof(LevelEditorManagerAudio.StartGameplayMusic)), HarmonyPrefix]
         public static bool CustomMusicOnPublish(LevelEditorManagerAudio __instance)
         {
             if (FraggleExpansionData.CustomTestMusic)
@@ -27,7 +33,7 @@ namespace FraggleExpansion.Patches.Creative
                 AudioLevelEditorStateListener._instance.OnStartGameplayMusic(new StartGameplayMusic());
             }
             return !FraggleExpansionData.CustomTestMusic;
-        }
+        }*/
 
         [HarmonyPatch(typeof(LevelEditorStateExplore), nameof(LevelEditorStateExplore.DisableState)), HarmonyPrefix]
         public static bool LastPositionDisplayOnReticle(ILevelEditorState nextState)
@@ -63,7 +69,7 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
-        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
         public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, out FallGuysCharacterController characterController, out ClientPlayerUpdateManager playerUpdateManager)
         {
             if (FraggleExpansionData.UseMainSkinInExploreState)
@@ -74,7 +80,7 @@ namespace FraggleExpansion.Patches.Creative
             characterController = null;
             playerUpdateManager = null;
             return true;
-        }
+        }*/
 
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
         public static bool DeletionForBraindeadStartLine(LevelEditorPlaceableObject __instance, out bool __result)
@@ -109,9 +115,56 @@ namespace FraggleExpansion.Patches.Creative
                 LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
         }
     }
-
+    // by arg type // new[] { typeof(string), typeof(LoadSceneParameters) }
+    // OnLevelEditorEnteredExploreModeEvent
+    // OnLevelLoadSuccessEvent
+    // LevelEditorPlaceableObject.SetActiveColliders(bool)
+    // LevelEditorPlaceableObject.ColliderBounds
     public class MainFeaturePatches
     {
+        // Transition
+        // MainMenu
+        // FallGuy_FraggleBackground_Vanilla
+        // FallGuy_Editor
+        [HarmonyPatch(typeof(SceneManager), nameof(SceneManager.Internal_SceneLoaded)), HarmonyPostfix]
+        public static void Internal_SceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // do stuff
+            if (scene.name == "MainMenu")
+            {
+                if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
+                //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
+                //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
+                if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false);  }
+            }
+            else if (scene.name == "FallGuy_Editor")
+            {
+                /*if (FraggleExpansionData.RemoveCostAndStock) // no effect
+                {
+                    new BudgetResourcesBarChanged(1500);
+                    AudioLevelEditorStateListener._instance.OnResourcesBarChanged(new BudgetResourcesBarChanged(2000));
+                }*/
+
+                if (FraggleExpansionData.BypassBounds)
+                    LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+
+                if (FraggleExpansionData.AddUnusedObjects)
+                {
+                    //Log.LogMessage("Objects to add: " + FraggleExpansionData.AddObjectData.Length);
+                    foreach (string sData in FraggleExpansionData.AddObjectData)
+                    {
+                        //Log.LogMessage("Adding object: " + sData);
+                        Main.Instance.AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced, 0, 0);
+                    }
+                }
+
+                Main.Instance.ManageCostRotationStockForAllObjects(FraggleExpansionData.RemoveCostAndStock, FraggleExpansionData.RemoveRotation);
+
+                Main.Instance.ManagePlaceableExtras();
+            }
+
+        }
+
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.ApplyScaleToObject)), HarmonyPrefix]
         public static bool FixCheckpointZoneWithPainterScaling(LevelEditorDrawableData __instance, bool subObj = false)
         {

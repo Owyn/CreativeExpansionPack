@@ -9,17 +9,17 @@ namespace FraggleExpansion.Patches.Reticle
         [HarmonyPatch(typeof(LevelEditorResourceBarViewModel), nameof(LevelEditorResourceBarViewModel.TotalPointsText), MethodType.Getter), HarmonyPrefix]
         public static bool ResourceBarTotalUsablePoints(out string __result)
         {
-            __result = FraggleExpansionData.RemoveCostAndStock ? "  ∞" : "1000";
+            __result = FraggleExpansionData.RemoveCostAndStock ? " ∞" : "1000";
             return false;
         }
 
-        [HarmonyPatch(typeof(LevelEditorResourceBarViewModel), nameof(LevelEditorResourceBarViewModel.BuildPointsUsedText), MethodType.Getter), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorResourceBarViewModel), nameof(LevelEditorResourceBarViewModel.BuildPointsUsedText), MethodType.Getter), HarmonyPrefix]
         public static bool ResourceBarUsedBuildPoints(out string __result)
         {
             __result = "NA  ";
             return !FraggleExpansionData.RemoveCostAndStock;
         }
-
+        */
         #endregion
 
         #region Text Patches

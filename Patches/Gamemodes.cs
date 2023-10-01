@@ -1,4 +1,4 @@
-﻿using FG.Common;
+﻿/*using FG.Common;
 using FG.Common.Fraggle;
 using FG.Common.LevelEditor.Serialization;
 using FGClient;
@@ -27,7 +27,7 @@ namespace FraggleExpansion.Patches.Gamemodes
                     __instance.TryToRespawn();
                 }
             }
-            else if (__instance.transform.position.y < __instance._respawnTriggerY && __instance.CanRespawn && !__instance._isWaitingForRespawn)
+            else if (__instance.transform.position.y < -120 && __instance.CanRespawn && !__instance._isWaitingForRespawn)
             {
                 __instance.TryToRespawn();
             }
@@ -235,3 +235,4 @@ namespace FraggleExpansion.Patches.Gamemodes
         #endregion
     }
 }
+*/
