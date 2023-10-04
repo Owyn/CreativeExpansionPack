@@ -91,6 +91,10 @@ namespace FraggleExpansion
                         FraggleExpansionData.InsanePainterSize = ResultAsBoolean;
                         break;
 
+                    case "levelmusic":
+                        FraggleExpansionData.LevelMusic = SplitData[1];
+                        break;
+
                     case "ghostblocks":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.GhostBlocks);
                         FraggleExpansionData.GhostBlocks = ResultAsBoolean;
@@ -167,6 +171,7 @@ namespace FraggleExpansion
         //public static bool LetFirstTimePopUpHappen = true;
         //public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
         //public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
+        public static string LevelMusic;
         public static string[] AddObjectData;
     }
 }
