@@ -12,6 +12,14 @@ using ScriptableObjects;
 using FG.Common.Loadables;
 using TreeView;
 using LevelEditor;
+using Levels.Obstacles;
+using static LevelEditor.LevelEditorWallResizer;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using static RootMotion.FinalIK.RagdollUtility;
+using FG.Common.UGCNetworking;
+using System.Text.RegularExpressions;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -182,4 +190,100 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
     }
-}
+
+    public class BugFixes
+    {
+        /*[HarmonyPatch(typeof(LevelEditorLevel), nameof(LevelEditorLevel.FetchLevelJSON)), HarmonyPostfix]
+        public static void FetchLevelJSON(LevelEditorLevel __instance, ResponseHandler customHandler)
+        {
+            Main.Instance.Log.LogMessage("Praying...");
+            //Main.Instance.Log.LogMessage(customHandler.ToString());
+            //Main.Instance.Log.LogMessage(customHandler.data);
+        }*/
+        /*[HarmonyPatch(typeof(LevelEditorLevel), nameof(LevelEditorLevel._levelJSON), MethodType.Getter), HarmonyPostfix]
+        public static void set_Name(LevelEditorLevel __instance, string value)
+        {
+            Main.Instance.Log.LogMessage("Praying...");
+            //Main.Instance.Log.LogMessage(__instance._customName);
+            //Main.Instance.Log.LogMessage(__instance._levelJSON);
+            //Main.Instance.Log.LogMessage(customHandler.ToString());
+            //Main.Instance.Log.LogMessage(customHandler.data);
+        }*/
+
+        public static Vector3 InitialVector = new Vector3(0.01F, 0.01F, 0.01F);
+        public static bool ShouldFixScale(Vector3 local, Vector3 lossy)
+        {
+            if (local == lossy) return false;
+            if (lossy == InitialVector) return false; // yea no, you can't make it all 0.01 now
+            
+            return true;
+        }
+        public static bool ShouldFixScaleByDetaching(Vector3 local, Vector3 lossy)
+        {
+            if (Mathf.Approximately(lossy.x, 0.0F) || Mathf.Approximately(lossy.y, 0.0F) || Mathf.Approximately(lossy.z, 0.0F)) return true;
+
+            return false;
+        }
+
+        public static Vector3 DoFixScale(Vector3 local, Vector3 lossy)
+        {
+            return new Vector3(1.0F / (lossy.x / local.x), 1.0F / (lossy.y / local.y), 1.0F / (lossy.z / local.z));
+        }
+
+        [HarmonyPatch(typeof(COMMON_SelfRespawner), nameof(COMMON_SelfRespawner.Start)), HarmonyPostfix]
+        public static void Scale_start(COMMON_SelfRespawner __instance)
+        {
+            var transf = __instance._respawnTransform; //SpawnPoint1 2 3
+            if (ShouldFixScaleByDetaching(transf.localScale, transf.lossyScale)) return;
+            if (!ShouldFixScale(transf.localScale, transf.lossyScale)) return;
+
+            transf.localScale = DoFixScale(transf.localScale, transf.lossyScale);
+        }
+
+        [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
+        public static void Scale_set(Transform __instance, UnityEngine.Vector3 value)
+        {
+            if (__instance.name == "Placeable_Obstacle_SpawnBasket_Vanilla_MEDIUM(Clone)")
+            {
+                List<GameObject> listOfChildren = Tools.FindAllChildren(__instance, "SpawnPoint1").Concat(Tools.FindAllChildren(__instance, "SpawnPoint2")).Concat(Tools.FindAllChildren(__instance, "SpawnPoint3")).ToList();
+                foreach (GameObject n in listOfChildren)
+                {
+                    if (ShouldFixScaleByDetaching(n.transform.localScale, n.transform.lossyScale))
+                    {
+                        /*Main.Instance.Log.LogMessage("detaching...");
+                        Transform Parent = n.transform.parent;
+                        n.transform.SetParent(null, true);
+                        n.transform.localScale = Vector3.one;
+                        //n.transform.SetParent(Parent, true); doesn't work?
+                        */
+                    }
+                    else if (ShouldFixScale(n.transform.localScale, n.transform.lossyScale))
+                    {
+                        n.transform.localScale = DoFixScale(n.transform.localScale, n.transform.lossyScale);
+                    }
+                }
+            }
+        }
+
+        // the SODIUM :-)
+        [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
+        public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
+        {
+            //Main.Instance.Log.LogMessage(__result);
+            if (FraggleExpansionData.LevelMusic.Length != 0)
+            {
+                __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
+            }
+            //Main.Instance.Log.LogMessage(__result);
+        }
+        
+        /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
+        public static bool LevelMusic(UGCLevelDataSchema __instance, string __result)
+        {
+            Main.Instance.Log.LogMessage(__result);
+            //__instance.LevelMusic = "MUS_InGame_Bean_Thieves";
+            __result = "MUS_InGame_Bean_Thieves";
+            return true;
+        }*/
+    }
+ }
