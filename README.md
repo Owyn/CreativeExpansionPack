@@ -12,6 +12,7 @@
 
 **How is CEP CE different from just CEP?**
 
+> - You can set custom music for your rounds published with CEP CE
 > - You can build digital objects in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
 > - Ghost Block support (advanced feature, a bit complex to use) with an ingame hotkey to toggle it ON and OFF (F4 hotkey - hold it during map loading)
 > - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
@@ -27,11 +28,13 @@
 > - - limit on the size of checkpoints
 > - - limit of themed objects being tied to the map theme (digital \ original)
 > - - building outside the map bounds area limit
+> - - you can link cannons to buttons 
 > - and some additional **features** such as:
 > - - ghost blocks
 > - - display your last position
 > - and even **bugfixes** for the original map editor!:
 > - - floating objects such as signs and arrows no longer move randomly and get saved like that
+> - - resized spawn baskets keep the original size of their spawnables
 
 **How is Creative Expansion Pack made?**
 > Creative Expansion Pack is made using BepinEx, a modding framework for games made with Unity.
