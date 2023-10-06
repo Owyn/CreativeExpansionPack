@@ -35,7 +35,7 @@ namespace FraggleExpansion
             {
                 string[] SplitData = Data.Split(':');
                 bool ResultAsBoolean = true;
-             // float ResultAsFloat = 0f;
+                //float ResultAsFloat = 0.025f;
 
                 switch (SplitData[0])
                 {
@@ -100,6 +100,12 @@ namespace FraggleExpansion
                         FraggleExpansionData.GhostBlocks = ResultAsBoolean;
                         break;
 
+                    /*case "snapSeparatorSize":
+                        ReadFloat(SplitData[1], ref ResultAsFloat, FraggleExpansionData.snapSeparatorSize);
+                        FraggleExpansionData.snapSeparatorSize = ResultAsFloat;
+                        Main.Instance.Log.LogMessage("snapSeparatorSize: " + FraggleExpansionData.snapSeparatorSize);
+                        break;*/
+
                     case "addunusedobjects":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.AddUnusedObjects);
                         FraggleExpansionData.AddUnusedObjects = ResultAsBoolean;
@@ -155,22 +161,23 @@ namespace FraggleExpansion
             else if (Data.ToLower() == "false") Value = false;
         }
 
-        /*
-        public void ReadFloat(string Data, ref float Value, float BaseResult)
+        
+        /*public void ReadFloat(string Data, ref float Value, float BaseResult)
         {
             Value = BaseResult;
             try { Value = float.Parse(Data); } catch { }
-        }
-        */
+        }*/
+        
     }
 
     public struct FraggleExpansionData
     {
         // True booleans
-        public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, /*CustomTestMusic,*/ RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, /*BetaWalls, DisplayLevel,*/ UseMainSkinInExploreState = true;
+        public static bool AddUnusedObjects, InsanePainterSize ,GhostBlocks, /*CustomTestMusic,*/ RemoveCostAndStock, CanClipObjects ,LastPostion, RemoveRotation, BypassBounds, /*BetaWalls, DisplayLevel,*/ UseMainSkinInExploreState;
         //public static bool LetFirstTimePopUpHappen = true;
         //public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
         //public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
+        //public static float snapSeparatorSize = 0.025F;
         public static string LevelMusic;
         public static string[] AddObjectData;
     }

@@ -25,6 +25,9 @@ using FraggleExpansion.Patches;
 using static UnityEngine.UI.GridLayoutGroup;
 using FGClient.UI.Core;
 using FGClient.UI;
+using static FG.Common.MetricConstants;
+using Mediatonic.Tools.Utils;
+using UnityEngine.Animations;
 
 namespace FraggleExpansion
 {
@@ -56,6 +59,7 @@ namespace FraggleExpansion
             _Harmony.PatchAll(typeof(ReticleUI));
 
             // Misc.
+            _Harmony.PatchAll(typeof(BugFixes));
             //_Harmony.PatchAll(typeof(MiscPatches));
             //Log.LogMessage("RUN: Patches DONE");
         }
@@ -84,14 +88,13 @@ namespace FraggleExpansion
                     {
                         Drawable._painterMaxSize = new Vector3(100000, 100000, 100000);
                     }
-                    bool ghosts = FraggleExpansionData.GhostBlocks;
-                    if (Input.GetKey(KeyCode.F4)) // hold it
+                    if (Input.GetKey(KeyCode.F4)) // hold it // not sure if you still need the hotkey
                     {
-                        ghosts = !ghosts;
+                        FraggleExpansionData.GhostBlocks = !FraggleExpansionData.GhostBlocks;
                         //Il2CppSystem.Nullable<EventInstance> AudioEvent = AudioManager.CreateAudioEvent("SFX_Emote_ExpressiveDance");
                         //AudioEvent.Value.start();
                     }
-                    if (ghosts)
+                    if (FraggleExpansionData.GhostBlocks)
                     {
                         Drawable.DrawableDepthMaxIncrements = 100000;
                     }
@@ -112,7 +115,8 @@ namespace FraggleExpansion
                     var ParameterComponent = Prefab.GetComponent<LevelEditorCarryTypeParameter>();
                     foreach (var CarryType in ParameterComponent._carryTypes)
                     {
-                        CarryType.CarryPrefab.GetComponent<COMMON_SelfRespawner>()._respawnTriggerY = -120;
+                        //CarryType.CarryPrefab.GetComponent<COMMON_SelfRespawner>().KillPlaneYThreshold = 75;
+                        CarryType.CarryPrefab.AddComponent<ScaleConstraint>();
                     }
                 }*/
 
@@ -123,6 +127,12 @@ namespace FraggleExpansion
 
                     Placeable.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().ParameterTypes = LevelEditorParametersManager.LegacyParameterTypes.None;
                 }*/
+
+                if ((Placeable.name == "POD_Floating_Cannon_Vanilla_Revised" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
+                {
+                    Prefab.AddComponent<LevelEditorReceiver>();
+                    Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
+                }
 
                 if (Prefab.GetComponent<LevelEditorGenericBuoyancy>()) // no more floating up and down
                     UnityEngine.Object.Destroy(Prefab.GetComponent<LevelEditorGenericBuoyancy>());
