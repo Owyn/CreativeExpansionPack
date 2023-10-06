@@ -20,6 +20,7 @@ using System.Linq;
 using static RootMotion.FinalIK.RagdollUtility;
 using FG.Common.UGCNetworking;
 using System.Text.RegularExpressions;
+using Il2CppSystem.Threading;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -189,33 +190,37 @@ namespace FraggleExpansion.Patches.Creative
             scale = scale.Abs();
             return true;
         }
+
+        // the SODIUM :-)
+        [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
+        public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
+        {
+            //Main.Instance.Log.LogMessage(__result);
+            if (FraggleExpansionData.LevelMusic.Length != 0)
+            {
+                __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
+            }
+            //Main.Instance.Log.LogMessage(__result);
+        }
+
+        /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
+        public static bool LevelMusic(UGCLevelDataSchema __instance, string __result)
+        {
+            Main.Instance.Log.LogMessage(__result);
+            //__instance.LevelMusic = "MUS_InGame_Bean_Thieves";
+            __result = "MUS_InGame_Bean_Thieves";
+            return true;
+        }*/
     }
 
     public class BugFixes
     {
-        /*[HarmonyPatch(typeof(LevelEditorLevel), nameof(LevelEditorLevel.FetchLevelJSON)), HarmonyPostfix]
-        public static void FetchLevelJSON(LevelEditorLevel __instance, ResponseHandler customHandler)
-        {
-            Main.Instance.Log.LogMessage("Praying...");
-            //Main.Instance.Log.LogMessage(customHandler.ToString());
-            //Main.Instance.Log.LogMessage(customHandler.data);
-        }*/
-        /*[HarmonyPatch(typeof(LevelEditorLevel), nameof(LevelEditorLevel._levelJSON), MethodType.Getter), HarmonyPostfix]
-        public static void set_Name(LevelEditorLevel __instance, string value)
-        {
-            Main.Instance.Log.LogMessage("Praying...");
-            //Main.Instance.Log.LogMessage(__instance._customName);
-            //Main.Instance.Log.LogMessage(__instance._levelJSON);
-            //Main.Instance.Log.LogMessage(customHandler.ToString());
-            //Main.Instance.Log.LogMessage(customHandler.data);
-        }*/
-
         public static Vector3 InitialVector = new Vector3(0.01F, 0.01F, 0.01F);
         public static bool ShouldFixScale(Vector3 local, Vector3 lossy)
         {
             if (local == lossy) return false;
             if (lossy == InitialVector) return false; // yea no, you can't make it all 0.01 now
-            
+
             return true;
         }
         public static bool ShouldFixScaleByDetaching(Vector3 local, Vector3 lossy)
@@ -230,60 +235,72 @@ namespace FraggleExpansion.Patches.Creative
             return new Vector3(1.0F / (lossy.x / local.x), 1.0F / (lossy.y / local.y), 1.0F / (lossy.z / local.z));
         }
 
-        [HarmonyPatch(typeof(COMMON_SelfRespawner), nameof(COMMON_SelfRespawner.Start)), HarmonyPostfix]
-        public static void Scale_start(COMMON_SelfRespawner __instance)
-        {
-            var transf = __instance._respawnTransform; //SpawnPoint1 2 3
-            if (ShouldFixScaleByDetaching(transf.localScale, transf.lossyScale)) return;
-            if (!ShouldFixScale(transf.localScale, transf.lossyScale)) return;
+        //void Levels.Obstacles.COMMON_SelfRespawner::AddRespawnFallbackTransform(UnityEngine.Transform fallbackRespawnTransform)
+        //- __instance: PB_BasketFall_LevelEditor(Clone) (Levels.Obstacles.COMMON_SelfRespawner)
+        //- Parameter 0 'fallbackRespawnTransform': SpawnPoint2(UnityEngine.Transform)
 
-            transf.localScale = DoFixScale(transf.localScale, transf.lossyScale);
+        [HarmonyPatch(typeof(COMMON_SelfRespawner), nameof(COMMON_SelfRespawner.SetRespawnTransformAndOffset)), HarmonyPostfix]
+        public static void SetRespawnTransformAndOffset(COMMON_SelfRespawner __instance, Transform respawnTransform, Vector3 respawnOffset)
+        {
+            //var transf = __instance._respawnTransform; //SpawnPoint1 2 3
+            //Main.Instance.Log.LogMessage(respawnTransform.name);
+            //Main.Instance.Log.LogMessage("old local: " + respawnTransform.localScale);
+            //Main.Instance.Log.LogMessage("old lossy: " + respawnTransform.lossyScale);
+            if (ShouldFixScaleByDetaching(respawnTransform.localScale, respawnTransform.lossyScale)) return;
+            else if (!ShouldFixScale(respawnTransform.localScale, respawnTransform.lossyScale)) return;
+            else if (__instance.transform.localScale != Vector3.one)
+            { 
+                Main.Instance.Log.LogMessage("Doc, my child " + respawnTransform.name + " is sick: " + __instance.transform.localScale);
+                __instance.transform.localScale = Vector3.one; // we can fix him
+            }
+            respawnTransform.localScale = DoFixScale(respawnTransform.localScale, respawnTransform.lossyScale);
+            //Main.Instance.Log.LogMessage("new local: " + respawnTransform.localScale);
         }
 
         [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
-        public static void Scale_set(Transform __instance, UnityEngine.Vector3 value)
+        public static void Scale_set(Transform __instance, Vector3 value)
         {
             if (__instance.name == "Placeable_Obstacle_SpawnBasket_Vanilla_MEDIUM(Clone)")
             {
                 List<GameObject> listOfChildren = Tools.FindAllChildren(__instance, "SpawnPoint1").Concat(Tools.FindAllChildren(__instance, "SpawnPoint2")).Concat(Tools.FindAllChildren(__instance, "SpawnPoint3")).ToList();
                 foreach (GameObject n in listOfChildren)
                 {
+                    if (n.transform.childCount == 0) continue;
+                    //Main.Instance.Log.LogMessage(n.transform.name);
+                    //Main.Instance.Log.LogMessage("SetS old local: " + n.transform.localScale);
+                    //Main.Instance.Log.LogMessage("SetS old lossy: " + n.transform.lossyScale);
                     if (ShouldFixScaleByDetaching(n.transform.localScale, n.transform.lossyScale))
                     {
-                        /*Main.Instance.Log.LogMessage("detaching...");
-                        Transform Parent = n.transform.parent;
-                        n.transform.SetParent(null, true);
-                        n.transform.localScale = Vector3.one;
+                        //Main.Instance.Log.LogMessage("detaching...");
+                        //Transform Parent = n.transform.parent;
+                        //n.transform.SetParent(null, true);
+                        //n.transform.localScale = Vector3.one;
                         //n.transform.SetParent(Parent, true); doesn't work?
-                        */
+
                     }
                     else if (ShouldFixScale(n.transform.localScale, n.transform.lossyScale))
                     {
                         n.transform.localScale = DoFixScale(n.transform.localScale, n.transform.lossyScale);
+                        //Main.Instance.Log.LogMessage("new local: " + n.transform.localScale);
                     }
                 }
             }
         }
 
-        // the SODIUM :-)
-        [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
-        public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
+        [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
+        public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
         {
-            //Main.Instance.Log.LogMessage(__result);
-            if (FraggleExpansionData.LevelMusic.Length != 0)
+            if(FraggleExpansionData.GhostBlocks && unseparatedSize.y > 22.0F) // spooky moment detected
             {
-                __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
+                //Main.Instance.Log.LogMessage(__instance.name);
+                //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + unseparatedSize.y);
+                unseparatedSize.y = 2.0F;
             }
-            //Main.Instance.Log.LogMessage(__result);
+            /*if (FraggleExpansionData.snapSeparatorSize != 0.025F) // I don't think this does anything useful
+            {
+                snapSeparation = FraggleExpansionData.snapSeparatorSize;
+            }*/
+            return true; // run the original f
         }
-        
-        /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
-        public static bool LevelMusic(UGCLevelDataSchema __instance, string __result)
-        {
-            Main.Instance.Log.LogMessage(__result);
-            //__instance.LevelMusic = "MUS_InGame_Bean_Thieves";
-            __result = "MUS_InGame_Bean_Thieves";
-            return true;
-        }*/
     }
  }
