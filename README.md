@@ -17,6 +17,7 @@
 > - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file)
 > - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
 > - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
+> - Select All & Select All of Type features
 
 **What features does Creative Expansion Pack include?**
 > - removing all mapmaking limits basically: 
@@ -30,6 +31,7 @@
 > - - building outside the map bounds area limit
 > - - you can link cannons to buttons 
 > - and some additional **features** such as:
+> - - select all and select all by type (hold left shift or ctrl when multi-(de)selecting)
 > - - ghost blocks
 > - - display your last position
 > - and even **bugfixes** for the original map editor!:
