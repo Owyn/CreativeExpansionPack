@@ -211,6 +211,47 @@ namespace FraggleExpansion.Patches.Creative
             __result = "MUS_InGame_Bean_Thieves";
             return true;
         }*/
+
+        [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.AddToSelection)), HarmonyPostfix]
+        public static void AddToSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
+        {
+            bool SelectAllofType = false;
+            if ((Input.GetKey(KeyCode.LeftShift) || (SelectAllofType = Input.GetKey(KeyCode.LeftControl))) && record) // hold it
+            {
+                var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
+                foreach (LevelEditorPlaceableObject o in stuff)
+                {
+                    if (SelectAllofType)
+                    {
+                        if (obj.name == o.name)
+                        {
+                            __instance.AddToSelection(o, options, false);
+                        }
+                    }
+                    else
+                    {
+                        __instance.AddToSelection(o, options, false); 
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.RemoveFromSelection)), HarmonyPostfix]
+        public static void RemoveFromSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
+        {
+            if (Input.GetKey(KeyCode.LeftControl) && record) // hold it
+            {
+                var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
+                foreach (LevelEditorPlaceableObject o in stuff)
+                {
+                    if (obj.name == o.name)
+                    {
+                        __instance.RemoveFromSelection(o, options, false, true);
+                    }
+                }
+            }
+        }
+
     }
 
     public class BugFixes
