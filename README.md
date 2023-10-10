@@ -31,7 +31,7 @@
 > - - building outside the map bounds area limit
 > - - you can link cannons to buttons 
 > - and some additional **features** such as:
-> - - select all and select all by type (hold left shift or ctrl when multi-(de)selecting)
+> - - select all and select all by type (hold left `shift` or `ctrl` when multi-(de)selecting)
 > - - ghost blocks
 > - - display your last position
 > - and even **bugfixes** for the original map editor!:
