@@ -32,7 +32,7 @@
 > - - you can link cannons to buttons 
 > - and some additional **features** such as:
 > - - select all and select all by type (hold left `shift` or `ctrl` when multi-(de)selecting)
-> - - ghost blocks
+> - - ghost blocks (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file, then increase `height` of a floor or smth else to more than the standard limit of 20 ticks via `R` hotkey)
 > - - display your last position
 > - and even **bugfixes** for the original map editor!:
 > - - floating objects such as signs and arrows no longer move randomly and get saved like that
