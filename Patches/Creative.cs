@@ -2,7 +2,15 @@
 using FG.Common;
 using FGClient;
 using HarmonyLib;
-using UnhollowerBaseLib;
+using Il2CppInterop.Common.Attributes;
+using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppInterop.Runtime.Runtime;
+using Il2CppSystem;
+using Il2CppSystem.Collections;
+using Il2CppSystem.Collections.Generic;
+using Il2CppSystem.Text;
 using UnityEngine;
 using Wushu.Framework.ExtensionMethods;
 using FMODUnity;
@@ -148,28 +156,7 @@ namespace FraggleExpansion.Patches.Creative
             }
             else if (scene.name == "FallGuy_Editor")
             {
-                /*if (FraggleExpansionData.RemoveCostAndStock) // no effect
-                {
-                    new BudgetResourcesBarChanged(1500);
-                    AudioLevelEditorStateListener._instance.OnResourcesBarChanged(new BudgetResourcesBarChanged(2000));
-                }*/
-
-                if (FraggleExpansionData.BypassBounds)
-                    LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
-
-                if (FraggleExpansionData.AddUnusedObjects)
-                {
-                    //Log.LogMessage("Objects to add: " + FraggleExpansionData.AddObjectData.Length);
-                    foreach (string sData in FraggleExpansionData.AddObjectData)
-                    {
-                        //Log.LogMessage("Adding object: " + sData);
-                        Main.Instance.AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced, 0, 0);
-                    }
-                }
-
-                Main.Instance.ManageCostRotationStockForAllObjects(FraggleExpansionData.RemoveCostAndStock, FraggleExpansionData.RemoveRotation);
-
-                Main.Instance.ManagePlaceableExtras();
+                Main.Instance.SetUp();
             }
 
         }
@@ -221,7 +208,11 @@ namespace FraggleExpansion.Patches.Creative
                 var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
                 foreach (LevelEditorPlaceableObject o in stuff)
                 {
-                    if (SelectAllofType)
+                    if (o.transform.parent != null)
+                    {
+                        continue; // it's a trap
+                    }
+                    else if (SelectAllofType)
                     {
                         if (obj.name == o.name)
                         {
@@ -230,7 +221,7 @@ namespace FraggleExpansion.Patches.Creative
                     }
                     else
                     {
-                        __instance.AddToSelection(o, options, false); 
+                        __instance.AddToSelection(o, options, false);
                     }
                 }
             }
@@ -303,7 +294,7 @@ namespace FraggleExpansion.Patches.Creative
         {
             if (__instance.name == "Placeable_Obstacle_SpawnBasket_Vanilla_MEDIUM(Clone)")
             {
-                List<GameObject> listOfChildren = Tools.FindAllChildren(__instance, "SpawnPoint1").Concat(Tools.FindAllChildren(__instance, "SpawnPoint2")).Concat(Tools.FindAllChildren(__instance, "SpawnPoint3")).ToList();
+                System.Collections.Generic.List<GameObject> listOfChildren = Tools.FindAllChildren(__instance, "SpawnPoint1").Concat(Tools.FindAllChildren(__instance, "SpawnPoint2")).Concat(Tools.FindAllChildren(__instance, "SpawnPoint3")).ToList();
                 foreach (GameObject n in listOfChildren)
                 {
                     if (n.transform.childCount == 0) continue;

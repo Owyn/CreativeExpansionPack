@@ -8,7 +8,7 @@ using FGClient;
 using FG.Common;
 using FG.Common.Fraggle;
 using FMODUnity;
-using BepInEx.IL2CPP.Utils.Collections;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using FG.Common.CMS;
 using System.Collections.Generic;
 using ScriptableObjects;
@@ -32,7 +32,7 @@ using UnityEngine.Animations;
 namespace FraggleExpansion
 {
     [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "2.4")]
-    public class Main : BasePlugin
+    public class Main : BepInEx.Unity.IL2CPP.BasePlugin
     {
         public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
         public static Main Instance;
@@ -62,6 +62,26 @@ namespace FraggleExpansion
             _Harmony.PatchAll(typeof(BugFixes));
             //_Harmony.PatchAll(typeof(MiscPatches));
             //Log.LogMessage("RUN: Patches DONE");
+        }
+
+        public void SetUp()
+        {
+            if (FraggleExpansionData.BypassBounds)
+                LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+
+            if (FraggleExpansionData.AddUnusedObjects)
+            {
+                //Log.LogMessage("Objects to add: " + FraggleExpansionData.AddObjectData.Length);
+                foreach (string sData in FraggleExpansionData.AddObjectData)
+                {
+                    //Log.LogMessage("Adding object: " + sData);
+                    AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced, 0, 0);
+                }
+            }
+
+            ManageCostRotationStockForAllObjects(FraggleExpansionData.RemoveCostAndStock, FraggleExpansionData.RemoveRotation);
+
+            ManagePlaceableExtras();
         }
 
         public void ManagePlaceableExtras()
