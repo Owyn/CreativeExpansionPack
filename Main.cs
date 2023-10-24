@@ -63,9 +63,10 @@ namespace FraggleExpansion
             //_Harmony.PatchAll(typeof(MiscPatches));
             //Log.LogMessage("RUN: Patches DONE");
         }
-
+        
         public void SetUp()
         {
+            PropertiesReader.Instance.InitializeData(); // re-read config every map load
             if (FraggleExpansionData.BypassBounds)
                 LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
 
