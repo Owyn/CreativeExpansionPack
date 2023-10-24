@@ -29,28 +29,35 @@ using static RootMotion.FinalIK.RagdollUtility;
 using FG.Common.UGCNetworking;
 using System.Text.RegularExpressions;
 using Il2CppSystem.Threading;
+using UnityEngine.Playables;
 
 namespace FraggleExpansion.Patches.Creative
 {
     public class FeaturesPatches
     {
-
-        /*[HarmonyPatch(typeof(LevelEditorManagerAudio), nameof(LevelEditorManagerAudio.StartGameplayMusic)), HarmonyPrefix]
-        public static bool CustomMusicOnPublish(LevelEditorManagerAudio __instance)
+        /*[HarmonyPatch(typeof(FallguyCustomisationHandler), nameof(FallguyCustomisationHandler.UpdateCostumeOption)), HarmonyPrefix]
+        public static bool UpdateCostumeOption(FallguyCustomisationHandler __instance, CostumeOption selectedCostumeOption, bool isTeamCostume)
         {
-            if (FraggleExpansionData.CustomTestMusic)
+            if (selectedCostumeOption.DisplayName == "Builder")
             {
-                if (!RuntimeManager.HasBankLoaded(FraggleExpansionData.MusicBankPlayMode))
-                {
-                    RuntimeManager.LoadBank(FraggleExpansionData.MusicBankPlayMode);
-                    RuntimeManager.LoadBank(FraggleExpansionData.MusicBankPlayMode + ".assets");
-                }
-
-                AudioLevelEditorStateListener._instance._randomMusicEvent = FraggleExpansionData.MusicEventPlayMode;
-                AudioLevelEditorStateListener._instance.OnStartGameplayMusic(new StartGameplayMusic());
+                // custom custumes?
             }
-            return !FraggleExpansionData.CustomTestMusic;
+            return true;
         }*/
+
+        // - CustomisationSelections 'customisations':  Customisations: ColourName=Colour_055 PatternName=Pattern_S08_27 CostumeTopName=BurgerBear_Top_01 CostumeBottomName=Fox_Bottom_01 CostumeFullName=NoneFullOption FaceplateName=faceplate_s10_03 VictoryPoseName=Victory_001 NicknameName=nickname_ss2_05 NameplateName=nameplate_ss02_event_trickerortreater EmoteNames=Emote_JumpRope/Emote_WaveA/Emote_Orcarina/Emote_Swiftlet
+        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
+        public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, out FallGuysCharacterController characterController, out ClientPlayerUpdateManager playerUpdateManager)
+        {
+            if (FraggleExpansionData.UseMainSkinInExploreState)
+            {
+                var CustomisationSelection = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
+                CustomisationManager.Instance.ApplyCustomisationsToFallGuy(playerGameObject, CustomisationSelection, -1);
+            }
+            characterController = null;
+            playerUpdateManager = null;
+            return true;
+        }
 
         [HarmonyPatch(typeof(LevelEditorStateExplore), nameof(LevelEditorStateExplore.DisableState)), HarmonyPrefix]
         public static bool LastPositionDisplayOnReticle(ILevelEditorState nextState)
@@ -85,19 +92,6 @@ namespace FraggleExpansion.Patches.Creative
 
             return true;
         }
-
-        /*[HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
-        public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, out FallGuysCharacterController characterController, out ClientPlayerUpdateManager playerUpdateManager)
-        {
-            if (FraggleExpansionData.UseMainSkinInExploreState)
-            {
-                var CustomisationSelection = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
-                CustomisationManager.Instance.ApplyCustomisationsToFallGuy(playerGameObject, CustomisationSelection, -1);
-            }
-            characterController = null;
-            playerUpdateManager = null;
-            return true;
-        }*/
 
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
         public static bool DeletionForBraindeadStartLine(LevelEditorPlaceableObject __instance, out bool __result)
@@ -190,6 +184,7 @@ namespace FraggleExpansion.Patches.Creative
             //Main.Instance.Log.LogMessage(__result);
         }
 
+        // LevelEditorManagerIO.SelectedMusic
         /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
         public static bool LevelMusic(UGCLevelDataSchema __instance, string __result)
         {
@@ -202,15 +197,23 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.AddToSelection)), HarmonyPostfix]
         public static void AddToSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
         {
-            bool SelectAllofType = false;
-            if ((Input.GetKey(KeyCode.LeftShift) || (SelectAllofType = Input.GetKey(KeyCode.LeftControl))) && record) // hold it
+            bool SelectAllofType = Input.GetKey(KeyCode.LeftControl);
+            bool SelectAll = Input.GetKey(KeyCode.LeftShift);
+            if ((SelectAll || SelectAllofType) && record)
             {
                 var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
                 foreach (LevelEditorPlaceableObject o in stuff)
                 {
-                    if (o.transform.parent != null)
+                    if (o.ParentObject != null)
                     {
                         continue; // it's a trap
+                    }
+                    else if (SelectAllofType && SelectAll)
+                    {
+                        if (obj.name == o.name && (obj.transform.localScale == o.transform.localScale))
+                        {
+                            __instance.AddToSelection(o, options, false);
+                        }
                     }
                     else if (SelectAllofType)
                     {
@@ -237,6 +240,10 @@ namespace FraggleExpansion.Patches.Creative
                 {
                     if (obj.name == o.name)
                     {
+                        if (Input.GetKey(KeyCode.LeftShift) && (obj.transform.localScale != o.transform.localScale))
+                        {
+                            continue;
+                        }
                         __instance.RemoveFromSelection(o, options, false, true);
                     }
                 }
