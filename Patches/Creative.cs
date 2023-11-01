@@ -1,4 +1,4 @@
-﻿using FG.Common.LevelEditor.Serialization;
+using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -124,6 +124,13 @@ namespace FraggleExpansion.Patches.Creative
         {
             if (FraggleExpansionData.BypassBounds)
                 LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+        }
+
+        [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue),MethodType.Setter), HarmonyPrefix]
+        public static bool Unlock_maxplayers(LevelEditorOptionsSliderSet __instance, int value)
+        {
+            if (value == 20) { return false; }
+            return true;
         }
     }
     // by arg type // new[] { typeof(string), typeof(LoadSceneParameters) }
