@@ -12,12 +12,12 @@
 
 **How is CEP CE different from just CEP?**
 
-> - You can set custom music for your rounds published with CEP CE
 > - You can build digital objects in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
 > - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file)
 > - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
 > - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
 > - Select All & Select All of Type features
+> - You can set max players to 40 even with a single small start-line
 
 **What features does Creative Expansion Pack include?**
 > - removing all mapmaking limits basically: 
@@ -29,6 +29,7 @@
 > - - limit on the size of checkpoints
 > - - limit of themed objects being tied to the map theme (digital \ original)
 > - - building outside the map bounds area limit
+> - - setting max players to 40 with just a single small start-line
 > - - you can link cannons to buttons 
 > - and some additional **features** such as:
 > - - select all and select all by type (hold left `shift` or `ctrl` when multi-(de)selecting)
