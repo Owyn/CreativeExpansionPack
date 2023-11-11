@@ -1,4 +1,4 @@
-using FG.Common.LevelEditor.Serialization;
+﻿using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -119,11 +119,13 @@ namespace FraggleExpansion.Patches.Creative
             return !FraggleExpansionData.CanClipObjects;
         }
 
-        [HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.LoadObjects)), HarmonyPostfix]
-        public static void BoundsOnExistingRound(LevelLoader __instance, Il2CppReferenceArray<UGCObjectDataSchema> schemas)
+        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.SetupMapBoundsAndVisuals)), HarmonyPostfix] // fires after set_MapPlacementBounds
+        public static void MapPlacementBounds(LevelEditorManager __instance, Vector3 mapSize)
         {
             if (FraggleExpansionData.BypassBounds)
-                LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+            {
+                __instance.MapPlacementBounds = new Bounds(__instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+            }
         }
 
         [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue),MethodType.Setter), HarmonyPrefix]
@@ -347,6 +349,14 @@ namespace FraggleExpansion.Patches.Creative
                 snapSeparation = FraggleExpansionData.snapSeparatorSize;
             }*/
             return true; // run the original f
+        }
+
+        [HarmonyPatch(typeof(LevelEditorActiveObjectBase), nameof(LevelEditorActiveObjectBase.CacheObjectPlacedPosAndRot)), HarmonyPostfix]
+        public static void CacheObjectPlacedPosAndRot(LevelEditorActiveObjectBase __instance)
+        {
+            var Buoyancy = __instance.GetComponent<LevelEditorGenericBuoyancy>();
+            if (Buoyancy)
+                Buoyancy._placedPositionRotationCached = true; // no more floating away // MT you forgot this shiz!
         }
     }
  }
