@@ -30,7 +30,6 @@
 > - - limit of themed objects being tied to the map theme (digital \ original)
 > - - building outside the map bounds area limit
 > - - setting max players to 40 with just a single small start-line
-> - - you can link cannons to buttons 
 > - and some additional **features** such as:
 > - - select all and select all by type (hold left `shift` or `ctrl` when multi-(de)selecting)
 > - - ghost blocks (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file, then increase `height` of a floor or smth else to more than the standard limit of 20 ticks via `R` hotkey)
