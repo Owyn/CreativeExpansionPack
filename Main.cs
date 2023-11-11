@@ -67,8 +67,8 @@ namespace FraggleExpansion
         public void SetUp()
         {
             PropertiesReader.Instance.InitializeData(); // re-read config every map load
-            if (FraggleExpansionData.BypassBounds)
-                LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+            //if (FraggleExpansionData.BypassBounds) // this here does nothing
+            //    LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
 
             if (FraggleExpansionData.AddUnusedObjects)
             {
@@ -149,14 +149,16 @@ namespace FraggleExpansion
                     Placeable.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().ParameterTypes = LevelEditorParametersManager.LegacyParameterTypes.None;
                 }*/
 
-                if ((Placeable.name == "POD_Floating_Cannon_Vanilla_Revised" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
+                /*if ((Placeable.name == "POD_Floating_Cannon_Revised_Vanilla" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
                 {
                     Prefab.AddComponent<LevelEditorReceiver>();
                     Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
-                }
+                }*/ // it makes maps not load
 
-                if (Prefab.GetComponent<LevelEditorGenericBuoyancy>()) // no more floating up and down
-                    UnityEngine.Object.Destroy(Prefab.GetComponent<LevelEditorGenericBuoyancy>());
+                /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
+                if (Buoyancy)
+                    UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
+                    //Buoyancy._placedPositionRotationCached = true; // no more floating away - doesn't work like this
             }
         }
 
@@ -210,11 +212,25 @@ namespace FraggleExpansion
                 {
                     CostHandler._baseCost = -1;
                     CostHandler._additiveBaseCost = -1;
-                    if (CostHandler.UseStock)
+                    if (CostHandler._useStock) // resets every mapload unlike .UseStock
                     {
-                        //CostHandler._useStock = false;
-                        CostHandler._stockCountAllowed = 9000;
+                        CostHandler._stockCountAllowed = 9000; // insurance
+                        CostHandler._useStock = false; // disables using the stock
+                        CostHandler.CMSData.Stock = -1; // this disables the icon
                     }
+                    
+                    var prefab_comp = Variant.Prefab.GetComponent<LevelEditorCostOverrideFirstFree>();
+                    if (prefab_comp)
+                    { 
+                        UnityEngine.Object.Destroy(prefab_comp); // still stays on the first pre-placed startline
+                        //Main.Instance.Log.LogMessage("destroyed FirstFree for: " + TrueOwner.name + " v: " + Variant.name);
+                    }
+                    if (CostHandler._firstFree)
+                    {
+                        CostHandler._firstFree = false;
+                        CostHandler.CMSData.FirstFree = false;
+                    }
+                    CostHandler.CMSData.Settings.IsOverlappingEnabled = !FraggleExpansionData.CanClipObjects;
                 }
 
                 if (RotationHandler != null && RemoveRotation)
