@@ -28,6 +28,8 @@ using FGClient.UI;
 using static FG.Common.MetricConstants;
 using Mediatonic.Tools.Utils;
 using UnityEngine.Animations;
+using Il2CppSystem;
+using static PerformanceData;
 
 namespace FraggleExpansion
 {
@@ -36,6 +38,7 @@ namespace FraggleExpansion
     {
         public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
         public static Main Instance;
+        public PlaceableObjectData BetaStart, DigitalStart, ClassicStart;
         //public SlimeGamemodesManager _SlimeGamemodeManager;
 
         public override void Load()
@@ -125,6 +128,18 @@ namespace FraggleExpansion
                     }
                 }
 
+                if (Placeable.name == "POD_Rule_FloorStart_Vanilla")
+                {
+                    BetaStart = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_Floor_Start_Retro")
+                {
+                    DigitalStart = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_Floor_Start_Revised_Vanilla")
+                {
+                    ClassicStart = Placeable;
+                }
                 /*if (Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>())
                 {
                     var DrawableWallSurface = Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>();
@@ -158,8 +173,21 @@ namespace FraggleExpansion
                 /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
                 if (Buoyancy)
                     UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
-                    //Buoyancy._placedPositionRotationCached = true; // no more floating away - doesn't work like this
+                                                            //Buoyancy._placedPositionRotationCached = true; // no more floating away - doesn't work like this
             }
+        }
+
+        int nClassic, nDigital, nBeta;
+        public int CountStartLines()
+        {
+            if (ClassicStart) { nClassic = LevelEditorManager.Instance.CostManager.GetCount(ClassicStart); } else { nClassic = 0; }
+            if (DigitalStart) { nDigital = LevelEditorManager.Instance.CostManager.GetCount(DigitalStart); } else { nDigital = 0; }
+            if (BetaStart) { nBeta = LevelEditorManager.Instance.CostManager.GetCount(BetaStart); } else { nBeta = 0; }
+            //Log.LogMessage("found starts: " + (nClassic + nDigital + nBeta));
+            if (nClassic > 0) { ThemeManager.CurrentStartGantry = ClassicStart; }
+            else if (nDigital > 0) { ThemeManager.CurrentStartGantry = DigitalStart; }
+            else if (nBeta > 0) { ThemeManager.CurrentStartGantry = BetaStart; }
+            return nClassic + nDigital + nBeta;
         }
 
         public void ManageCostRotationStockForAllObjects(bool RemoveCostAndStock, bool RemoveRotation)
@@ -172,7 +200,7 @@ namespace FraggleExpansion
 
                 var DefaultVariantPrefab = Placeable.defaultVariant.Prefab;
 
-                if (Placeable.name == "POD_Wheel_Maze_Revised")
+                if (Placeable.name == "POD_Wheel_Maze_Revised_Common")
                 {
                     LevelEditorCostOverrideWheelMaze Comp = DefaultVariantPrefab.GetComponent<LevelEditorCostOverrideWheelMaze>();
                     Comp._chevronPatternModifier._costModifier = 0;
