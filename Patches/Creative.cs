@@ -30,6 +30,7 @@ using FG.Common.UGCNetworking;
 using System.Text.RegularExpressions;
 using Il2CppSystem.Threading;
 using UnityEngine.Playables;
+using FraggleExpansion;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -96,10 +97,26 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
         public static bool DeletionForBraindeadStartLine(LevelEditorPlaceableObject __instance, out bool __result)
         {
-            bool StartLineValidation = LevelEditorManager.Instance.CostManager.GetCount(__instance.ObjectDataOwner) > 1 && __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
-            bool UseStartLineValidation = ThemeManager.CurrentThemeData.ObjectList.GetStartGantry() == __instance.ObjectDataOwner;
-            __result = UseStartLineValidation ? StartLineValidation : __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
+            switch (__instance.ObjectDataOwner.name)
+            {
+                case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
+                case "POD_Rule_Floor_Start_Retro": // digital
+                case "POD_Rule_FloorStart_Vanilla": // beta
+                    if(Main.Instance.CountStartLines() <= 1) // last one
+                    {
+                        __result = false;
+                        return false;
+                    }
+                    break;
+            }
+            __result = __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
             return false;
+        }
+
+        [HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.PostLoadObjects)), HarmonyPostfix]
+        public static void PostLoadObjects(LevelLoader __instance)
+        {
+            Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
         }
     }
 
@@ -131,7 +148,7 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue),MethodType.Setter), HarmonyPrefix]
         public static bool Unlock_maxplayers(LevelEditorOptionsSliderSet __instance, int value)
         {
-            if (value == 20) { return false; }
+            if (value == 20 || value == 0) { return false; }
             return true;
         }
     }
