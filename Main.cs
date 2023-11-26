@@ -38,7 +38,7 @@ namespace FraggleExpansion
     {
         public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
         public static Main Instance;
-        public PlaceableObjectData BetaStart, DigitalStart, ClassicStart;
+        PlaceableObjectData BetaStart, DigitalStart, ClassicStart, SurvivalStart, BetaEnd, DigitalEnd, ClassicEnd;
         //public SlimeGamemodesManager _SlimeGamemodeManager;
 
         public override void Load()
@@ -127,7 +127,7 @@ namespace FraggleExpansion
                         Drawable.DrawableDepthMaxIncrements = 20;
                     }
                 }
-
+                
                 if (Placeable.name == "POD_Rule_FloorStart_Vanilla")
                 {
                     BetaStart = Placeable;
@@ -139,6 +139,22 @@ namespace FraggleExpansion
                 else if (Placeable.name == "POD_Rule_Floor_Start_Revised_Vanilla")
                 {
                     ClassicStart = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_Floor_Start_Survival")
+                {
+                    SurvivalStart = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_FloorEnd_Vanilla")
+                {
+                    BetaEnd = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_Floor_End_Retro")
+                {
+                    DigitalEnd = Placeable;
+                }
+                else if (Placeable.name == "POD_Rule_Floor_End_Revised_Vanilla")
+                {
+                    ClassicEnd = Placeable;
                 }
                 /*if (Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>())
                 {
@@ -176,18 +192,28 @@ namespace FraggleExpansion
                                                             //Buoyancy._placedPositionRotationCached = true; // no more floating away - doesn't work like this
             }
         }
-
-        int nClassic, nDigital, nBeta;
+        
         public int CountStartLines()
         {
+            int nClassic, nDigital, nBeta, nSurvival;
             if (ClassicStart) { nClassic = LevelEditorManager.Instance.CostManager.GetCount(ClassicStart); } else { nClassic = 0; }
             if (DigitalStart) { nDigital = LevelEditorManager.Instance.CostManager.GetCount(DigitalStart); } else { nDigital = 0; }
             if (BetaStart) { nBeta = LevelEditorManager.Instance.CostManager.GetCount(BetaStart); } else { nBeta = 0; }
-            //Log.LogMessage("found starts: " + (nClassic + nDigital + nBeta));
+            if (SurvivalStart) { nSurvival = LevelEditorManager.Instance.CostManager.GetCount(SurvivalStart); } else { nSurvival = 0; }
+            //Log.LogMessage("found starts: " + (nClassic + nDigital + nBeta + nSurvival));
             if (nClassic > 0) { ThemeManager.CurrentStartGantry = ClassicStart; }
             else if (nDigital > 0) { ThemeManager.CurrentStartGantry = DigitalStart; }
             else if (nBeta > 0) { ThemeManager.CurrentStartGantry = BetaStart; }
-            return nClassic + nDigital + nBeta;
+            else if (nSurvival > 0) { ThemeManager.CurrentStartGantry = SurvivalStart; }
+            return nClassic + nDigital + nBeta + nSurvival;
+        }
+
+        public void CountEndLines()
+        {
+            if (ClassicEnd && LevelEditorManager.Instance.CostManager.GetCount(ClassicEnd) > 0) { ThemeManager.CurrentFinishGantry = ClassicEnd; }
+            if (DigitalEnd && LevelEditorManager.Instance.CostManager.GetCount(DigitalEnd) > 0) { ThemeManager.CurrentFinishGantry = DigitalEnd; }
+            if (BetaEnd && LevelEditorManager.Instance.CostManager.GetCount(BetaEnd) > 0) { ThemeManager.CurrentFinishGantry = BetaEnd; }
+            //Log.LogMessage("found ends: " + nClassic + " " + nDigital + " " + nBeta);
         }
 
         public void ManageCostRotationStockForAllObjects(bool RemoveCostAndStock, bool RemoveRotation)
@@ -275,28 +301,35 @@ namespace FraggleExpansion
             try
             {
                 AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
+                if (!Loadable.Asset) // missing data
+                { 
+                    Loadable.LoadBlocking();
+                    if (!Loadable.Asset) { Log.LogMessage("couldn't load asset for: " + AssetRegistryName); return; }
+                    Log.LogMessage("Load asset succeess for: " + AssetRegistryName);
+                }
                 PlaceableObjectData Owner = Loadable.Asset.Cast<PlaceableVariant_Base>().Owner;
                 LevelEditorObjectList CurrentLevelEditorObjectList = ThemeManager.CurrentThemeData.ObjectList;
                 var CurrentObjectList = LevelEditorObjectList.CurrentObjects.Cast<Il2CppSystem.Collections.Generic.List<PlaceableObjectData>>();
-                if (Owner == null) return;
-                if (CurrentObjectList.Contains(Owner) && HasCarouselDataForObject(Owner)) return;
-                Owner.category = Category;
+                if (!Owner) { Log.LogMessage("asset " + AssetRegistryName + " has no owner data"); return; }
+                if (CurrentObjectList.Contains(Owner) && AssetRegistryName != "Placeable_Rule_Button_Future_Medium") /*&& HasCarouselDataForObject(Owner)*/ { /*Log.LogMessage("object " + AssetRegistryName + " is already in the list");*/ return; } // else the future button won't load into the digital theme
+                Loadable.LoadBlocking(); // helps
+                if (Owner.category == LevelEditorPlaceableObject.Category.Hidden) { Owner.category = Category; }
                 VariantTreeElement VariantElement = new VariantTreeElement(Owner.name, 0, ID);
-                Owner.defaultVariant = Owner.objectVariants[DefaultVariantIndex];
+                //Owner.defaultVariant = Owner.objectVariants[DefaultVariantIndex];
                 VariantElement.Variant = Owner.objectVariants[DefaultVariantIndex];
                 CurrentLevelEditorObjectList.CarouselItems.children.Add(VariantElement);
                 CurrentLevelEditorObjectList.treeElements.Add(VariantElement);
                 CurrentObjectList.Add(Owner);
             }
-            catch { }
+            catch /*(System.Exception e)*/ { /*Log.LogMessage(e);*/ }
         }
 
-        public bool HasCarouselDataForObject(PlaceableObjectData Data)
+        public bool HasCarouselDataForObject(PlaceableObjectData Data) // yea, this thing only works for default start\end-lines and the floor for some reason
         {
             LevelEditorObjectList CurrentLevelEditorObjectList = ThemeManager.CurrentThemeData.ObjectList;
             foreach (var CarouselItem in CurrentLevelEditorObjectList.CarouselItems.children)
             {
-                if (CarouselItem.Cast<VariantTreeElement>().Variant.Owner == Data)
+                if (CarouselItem.Cast<VariantTreeElement>().Variant.Owner.name == Data.name)
                     return true;
             }
 
