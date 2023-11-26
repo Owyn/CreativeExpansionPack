@@ -102,11 +102,17 @@ namespace FraggleExpansion.Patches.Creative
                 case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
                 case "POD_Rule_Floor_Start_Retro": // digital
                 case "POD_Rule_FloorStart_Vanilla": // beta
-                    if(Main.Instance.CountStartLines() <= 1) // last one
+                case "POD_Rule_Floor_Start_Survival": // survival
+                    if (Main.Instance.CountStartLines() <= 1) // last one
                     {
                         __result = false;
                         return false;
                     }
+                    break;
+                case "POD_Rule_Floor_End_Revised_Vanilla": // classic
+                case "POD_Rule_Floor_End_Retro": // digital
+                case "POD_Rule_FloorEnd_Vanilla": // beta
+                    Main.Instance.CountEndLines();
                     break;
             }
             __result = __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
@@ -117,6 +123,7 @@ namespace FraggleExpansion.Patches.Creative
         public static void PostLoadObjects(LevelLoader __instance)
         {
             Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
+            Main.Instance.CountEndLines();
         }
     }
 
@@ -145,7 +152,18 @@ namespace FraggleExpansion.Patches.Creative
             }
         }
 
-        [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue),MethodType.Setter), HarmonyPrefix]
+        // ook, this removes the "startline has changed" text but nothing more, it still restricts to 20 players...
+        /*[HarmonyPatch(typeof(LevelEditorManagerProxy), nameof(LevelEditorManagerProxy.CheckStartlineUpdateNotifications)), HarmonyPrefix]
+        [HarmonyPatch(new[] { typeof(int), typeof(int) })] // overload match
+        public static bool CheckStartlineUpdateNotifications(LevelEditorManagerProxy __instance, out int prevStartPoints, out int currentStartPoints)
+        {
+            prevStartPoints = 60;
+            currentStartPoints = 60;
+            return false;
+        }*/
+
+        // just unlocks the slider
+        [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue), MethodType.Setter), HarmonyPrefix]
         public static bool Unlock_maxplayers(LevelEditorOptionsSliderSet __instance, int value)
         {
             if (value == 20 || value == 0) { return false; }
