@@ -294,6 +294,12 @@ namespace FraggleExpansion.Patches.Creative
             }
         }
 
+        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPrefix]
+        public static bool AddScalingFeature(LevelEditorPlaceableObject __instance)
+        {
+            return !FraggleExpansionData.RemoveDefaultScalingFeature;
+        }
+
     }
 
     public class BugFixes
