@@ -13,10 +13,10 @@
 **How is CEP CE different from just CEP?**
 
 > - You can build digital objects (& beta objects) in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
-> - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file)
+> - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `\BepinEx\plugins\CreativeExpansionPack\ExpansionData.txt` config file)
 > - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
 > - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
-> - Select All & Select All of Type features
+> - Select All & Select All by Type & Select All by Type & Scale features
 > - You can set max players to 40 even with a single small start-line
 
 **What features does Creative Expansion Pack include?**
@@ -50,7 +50,7 @@
 > However, PLEASE MAKE GOOD USE OF CREATIVE EXPANSION PACK!!! This mod is clearly not a joke and has mad power over Fall Guys Creative, and everyone knows that with great power comes great responsibility.
 
 **I can't play normal Fall Guys when Creative Expansion Pack is installed, how to deal with that?!**
-> You can't, in order to play the normal game you got to uninstall BepinEx, you can do that by using the "Restore_EAC" batch script in your game's root and quickly switch back to the mod by using the "Install_BepinEx" batch script that's in the same folder.
+> You can't, in order to play the normal game you got to uninstall BepinEx, you can do that by using the "`TURN_OFF_CEP_CE.bat`" batch script in your game's root and quickly switch back to the mod by using the "`INSTALL_CEP_CE.bat`" batch script that's in the same folder.
 
 ## Installation Guide 
 
@@ -58,7 +58,7 @@
  
  2. Drop everything within the .zip file in the the zip file into your game's root,
  
- 3. Run the Install_BepinEx batch file,
+ 3. Run the `INSTALL_CEP_CE.bat` batch file,
  
  4. Enjoy! Mind that the first boot might take some time...
 
@@ -66,7 +66,7 @@
 
 1. Go to your game's root,
 
-2. Run the Restore_EAC batch file, if you want to go back to Expansion Pack just run Install_BepinEx again.
+2. Run the `TURN_OFF_CEP_CE.bat` batch file, if you want to go back to Expansion Pack just run Install_BepinEx again.
 
 ## Credits
 > kota69th, since he created the mod
