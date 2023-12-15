@@ -69,7 +69,8 @@ namespace FraggleExpansion
             //_Harmony.PatchAll(typeof(MiscPatches));
             //Log.LogMessage("RUN: Patches DONE");
         }
-        
+
+        int itemID = 1000;
         public void SetUp()
         {
             PropertiesReader.Instance.InitializeData(); // re-read config every map load
@@ -79,12 +80,11 @@ namespace FraggleExpansion
             if (FraggleExpansionData.AddUnusedObjects)
             {
                 //Log.LogMessage("Objects to add: " + FraggleExpansionData.AddObjectData.Length);
-                int i = 5000;
                 foreach (string sData in FraggleExpansionData.AddObjectData)
                 {
                     //Log.LogMessage("Adding object: " + sData);
-                    AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced,0,i);
-                    i++;
+                    AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced,0, itemID);
+                    itemID++;
                 }
             }
 
@@ -239,7 +239,7 @@ namespace FraggleExpansion
 
                 var DefaultVariantPrefab = Placeable.defaultVariant.Prefab;
 
-                if (Placeable.name == "POD_Wheel_Maze_Revised_Common")
+                if (Placeable.name == "POD_Wheel_Maze_Revised_Common" || Placeable.name == "POD_WheelMaze")
                 {
                     LevelEditorCostOverrideWheelMaze Comp = DefaultVariantPrefab.GetComponent<LevelEditorCostOverrideWheelMaze>();
                     Comp._chevronPatternModifier._costModifier = 0;
@@ -328,148 +328,123 @@ namespace FraggleExpansion
 
         public void AddAllObjectsToCurrentList()
         {
-            int id = 5000;
             foreach (var el in AssetRegistry.Instance._registry.Keys) // can't go by GUID values cuz can't Ref error
             {
-                AddObjectToCurrentList(el, LevelEditorPlaceableObject.Category.Advanced, 0, id);
-                id++;
+                AddObjectToCurrentList(el, LevelEditorPlaceableObject.Category.Advanced, 0, itemID);
+                itemID++;
             }
         }
 
         public void AddObjectToCurrentList(string AssetRegistryName, LevelEditorPlaceableObject.Category Category = LevelEditorPlaceableObject.Category.Advanced, int DefaultVariantIndex = 0, int ID = 0)
         {
-            try
-            {
-                AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
-                if (!Loadable.Asset) return; // missing data
-                PlaceableObjectData Owner = Loadable.Asset.Cast<PlaceableVariant_Base>().Owner;
-                LevelEditorObjectList CurrentLevelEditorObjectList = ThemeManager.CurrentThemeData.ObjectList;
-                var CurrentObjectList = LevelEditorObjectList.CurrentObjects.Cast<Il2CppSystem.Collections.Generic.List<PlaceableObjectData>>();
-                if (!Owner) { Log.LogMessage("asset " + AssetRegistryName + " has no owner data"); return; }
-                if (HasCarouselDataForObject(Owner)) { /*Log.LogMessage("object " + AssetRegistryName + " is already in the list " +Owner.name);*/ return; }
-                Loadable.LoadBlocking(); // does the thing, but categories now carry over to standard objects
-                if (Owner.name == "POD_FanPlatform_OFF_Vanilla" || Owner.name == "POD_FanPlatform_ON_Vanilla") { return; } // blacklist // these guys somehow make digital maps softlock
-                if (Owner.category == LevelEditorPlaceableObject.Category.Hidden) { Owner.category = Category; Log.LogMessage("Object unHidden: " + Owner.name); }
-                Owner.objectNameKey = Owner.name;
-                VariantTreeElement VariantElement = new VariantTreeElement(Owner.name, 0, ID);
-                //Owner.defaultVariant = Owner.objectVariants[DefaultVariantIndex];
-                VariantElement.Variant = Owner.defaultVariant; //Owner.objectVariants[DefaultVariantIndex];
+            AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
+            if (!Loadable.Asset) return; // missing data
+            PlaceableObjectData Owner = Loadable.Asset.Cast<PlaceableVariant_Base>().Owner;
+            var CurrentObjectTreeList = ThemeManager.CurrentThemeData.ObjectList.m_TreeElements;
+            var CurrentObjectList = LevelEditorObjectList.CurrentObjects.Cast<Il2CppSystem.Collections.Generic.List<PlaceableObjectData>>();
+            if (!Owner) { Log.LogMessage("asset " + AssetRegistryName + " has no owner data"); return; }
+            if (HasCarouselDataForObject(Owner)) { /*Log.LogMessage("object " + AssetRegistryName + " is already in the list " +Owner.name);*/ return; }
+            Loadable.LoadBlocking(); // does the thing, but categories now carry over to standard objects
+            if (Owner.name == "POD_FanPlatform_OFF_Vanilla" || Owner.name == "POD_FanPlatform_ON_Vanilla") { return; } // blacklist // these guys somehow make digital maps softlock
+            Owner.objectNameKey = Owner.name; // technical names for added objects
+            VariantTreeElement VariantElement = new VariantTreeElement(Owner.name, 1, ID);
+            //Owner.defaultVariant = Owner.objectVariants[DefaultVariantIndex];
+            VariantElement.Variant = Owner.defaultVariant; //Owner.objectVariants[DefaultVariantIndex];
                 
-                // variant choice in the wheel:
-                bool attached = false;
-                string simpleName = Owner.name
-                                    .Replace("POD_Inflatable_Vanilla_Wall_beta", "Inflatable")
-                                    .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
-                                    .Replace("_Retro", "")
-                                    .Replace("_Vanilla", "")
-                                    .Replace("_Matt_2_2_Double_Height", "")
-                                    .Replace("Drawable_Ramp", "Ramp")
-                                    .Replace("POD_Drawable_Edge_", "")
-                                    .Replace("POD_Curve", "Curve")
-                                    .Replace("POD_Rule_Floor_", "")
-                                    .Replace("POD_Rule_Floor", "")
-                                    .Replace("_Survival", "")
-                                    .Replace("_Revised", "")
-                                    .Replace("_1", "")
-                                    .Replace("_V1", "")
-                                    .Replace("_V2", "")
-                                    .Replace("Single", "")
-                                    .Replace("Double", "")
-                                    .Replace("_unification", "")
-                                    .Replace("_Updated", "")
-                                    .Replace("_Normal", "")
-                                    .Replace("_Short", "")
-                                    .Replace("_Vinyl", "")
-                                    .Replace("POD_Special_Goo_Slide", "Goop")
-                                    .Replace("SpinDoor", "Spin_Door")
-                                    .Replace("_Moderate", "")
-                                    .Replace("_Steep", "")
-                                    .Replace("_Strong", "")
-                                    .Replace("_Gentle", "")
-                                    .Replace("_Flat", "")
-                                    .Replace("SnowVanilla", "Snow")
-                                    .Replace("SnowRetro", "Snow")
-                                    .Replace("_Left", "")
-                                    .Replace("_Right", "")
-                                    .Replace("_Mid", "")
-                                    .Replace("_Hard", "")
-                                    .Replace("_Ramp_Soft", "_Ramp")
-                                    .Replace("_Edge", "")
-                                    .Replace("_Feature", "")
-                                    .Replace("POD_Wheel", "")
-                                    .Replace("_Plastic", "")
-                                    .Replace("_Common", "")
-                                    .Replace("_ON", "")
-                                    .Replace("_OFF", "")
-                                    .Replace("Multi", "")
-                                    .Replace("e_Post_End", "")
-                                    .Replace("POD_Cube", "POD_Floor")
-                                    .Replace("POD_Ramp", "POD_Drawable_Ramp")
-                                    .Replace("_Future", "");
-                for (int i = 1; i < CurrentLevelEditorObjectList.m_TreeElements.Count; i++)
+            // variant choice in the wheel:
+            bool attached = false;
+            string simpleName = Owner.name
+                                .Replace("POD_Inflatable_Vanilla_Wall_beta", "Inflatable")
+                                .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
+                                .Replace("_Retro", "")
+                                .Replace("_Vanilla", "")
+                                .Replace("POD_Floor_Vinyl_Matt_2_2_Double_Height", "POD_Floor_Soft")
+                                .Replace("POD_Floor_Hard_Plastic", "POD_Floor_Soft")
+                                .Replace("Drawable_Ramp", "Ramp")
+                                .Replace("POD_Drawable_Edge_", "")
+                                .Replace("POD_Curve", "Curve")
+                                .Replace("FloorStart", "Floor_Start")
+                                .Replace("FloorEnd", "Floor_End")
+                                .Replace("_Survival", "")
+                                .Replace("_Revised", "")
+                                .Replace("_1", "")
+                                .Replace("_V1", "")
+                                .Replace("_V2", "")
+                                .Replace("Single", "")
+                                .Replace("Double", "")
+                                .Replace("_unification", "")
+                                .Replace("_Updated", "")
+                                .Replace("_Normal", "")
+                                .Replace("_Short", "")
+                                .Replace("_Vinyl", "")
+                                .Replace("POD_Special_Goo_Slide", "Goop")
+                                .Replace("SpinDoor", "Spin_Door")
+                                .Replace("_Moderate", "")
+                                .Replace("_Steep", "")
+                                .Replace("_Strong", "")
+                                .Replace("_Gentle", "")
+                                .Replace("_Flat", "")
+                                .Replace("SnowVanilla", "Snow")
+                                .Replace("SnowRetro", "Snow")
+                                .Replace("_Left", "")
+                                .Replace("_Right", "")
+                                .Replace("_Mid", "")
+                                .Replace("_Hard", "")
+                                .Replace("_Ramp_Soft", "_Ramp")
+                                .Replace("_Edge", "")
+                                .Replace("_Feature", "")
+                                .Replace("POD_Wheel", "")
+                                .Replace("_Common", "")
+                                .Replace("_ON", "")
+                                .Replace("_OFF", "")
+                                .Replace("Multi", "")
+                                .Replace("e_Post_End", "")
+                                .Replace("POD_Cube", "POD_Floor_Soft")
+                                .Replace("POD_Ramp", "POD_Drawable_Ramp")
+                                .Replace("_Future", "");
+            for (int i = CurrentObjectTreeList.Count-1; i >= 0 ; i--)
+            {
+                var CarouselItem = CurrentObjectTreeList[i];
+                if (CarouselItem.Variant != null && CarouselItem.Variant.Owner.name.Contains(simpleName))
                 {
-                    var CarouselItem = CurrentLevelEditorObjectList.m_TreeElements[i];
-                    if (CarouselItem.m_Children != null)
+                    if (CarouselItem.Variant.Owner.category != Owner.category)
                     {
-                        for (int n = CarouselItem.m_Children.Count-1; n >= 0; n--)
-                        {
-                            if (CarouselItem.m_Children[n].Cast<VariantTreeElement>().Variant.Owner.name.Contains(simpleName))
-                            {
-                                if(CarouselItem.m_Children[n].Cast<VariantTreeElement>().Variant.Owner.category != Owner.category)
-                                {
-                                    Owner.category = CarouselItem.m_Children[n].Cast<VariantTreeElement>().Variant.Owner.category;
-                                }
-                                //Log.LogMessage("adding "+Owner.name+" ( "+ simpleName + " ) to existing list " + i + " of "+ CarouselItem.m_Children.Count + " w: " + CarouselItem.m_Children[n].name);
-                                attached = true;
-                                VariantElement.depth = 1;
-                                CurrentLevelEditorObjectList.m_TreeElements.Insert(i+1+n+1, VariantElement); // place after it
-                                break;
-                            }
-                        }
+                        Owner.category = CarouselItem.Variant.Owner.category;
                     }
-                    else if (CarouselItem.Cast<VariantTreeElement>().Variant.Owner.name.Contains(simpleName))
+                    if (CarouselItem.depth == 0)
                     {
-                        //Log.LogMessage("adding " + Owner.name + " to a new list "+ i +" w: " + CarouselItem.m_Name);
-                        attached = true;
-                        if (CarouselItem.Cast<VariantTreeElement>().Variant.Owner.category != Owner.category)
-                        {
-                            Owner.category = CarouselItem.Cast<VariantTreeElement>().Variant.Owner.category;
-                        }
-                        CurrentLevelEditorObjectList.m_TreeElements.Insert(i, new VariantTreeElement("Folder for "+ simpleName, 0, ID+5000));
+                        itemID++;
+                        CurrentObjectTreeList.Insert(i, new VariantTreeElement("Folder for " + Owner.name, 0, itemID));
                         CarouselItem.depth = 1;
-                        VariantElement.depth = 1;
-                        CurrentLevelEditorObjectList.m_TreeElements.Insert(i + 2, VariantElement);
-                        break;
+                        i++; // our folder made it bigger
+                        //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a new list " + i + " w: " + CarouselItem.name);
                     }
-                    if (attached) { break; }
+                    else
+                    {
+                        //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a list " + i + " of " + CarouselItem.children.Count + " w: " + CarouselItem.name);
+                    }
+                    CurrentObjectTreeList.Insert(i + 1, VariantElement); // place after it
+                    attached = true;
+                    break;
                 }
-                if (!attached)
-                {
-                    //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to the wheel root");
-                    CurrentLevelEditorObjectList.m_TreeElements.Add(VariantElement);
-                }
-                if (!CurrentObjectList.Contains(Owner)) CurrentObjectList.Add(Owner); // POD DB
-                //else Log.LogMessage("already in the ObjectList DB: " + Owner.name);
             }
-            catch (System.Exception e) { Log.LogMessage(e); } // we don't have any errors here, but lets leavy Try
+            if (!attached)
+            {
+                VariantElement.depth = 0;
+                CurrentObjectTreeList.Add(VariantElement);
+                //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to the wheel root");
+                if (Owner.category == LevelEditorPlaceableObject.Category.Hidden) { Owner.category = Category; Log.LogMessage("Object unHidden: " + Owner.name); }
+            }
+            if (!CurrentObjectList.Contains(Owner)) CurrentObjectList.Add(Owner); // active POD DB
+            //else Log.LogMessage("already in the ObjectList DB: " + Owner.name);
         }
         public bool HasCarouselDataForObject(PlaceableObjectData Data)
         {
-            LevelEditorObjectList CurrentLevelEditorObjectList = ThemeManager.CurrentThemeData.ObjectList;
-            foreach (var CarouselItem in CurrentLevelEditorObjectList.CarouselItems.children)
+            foreach (var CarouselItem in ThemeManager.CurrentThemeData.ObjectList.m_TreeElements)
             {
-                if (CarouselItem.hasChildren) 
-                {
-                    foreach (var subChild in CarouselItem.m_Children)
-                    {
-                        if (subChild.Cast<VariantTreeElement>().Variant.Owner.name == Data.name)
-                            return true;
-                    }
-                }
-                else if (CarouselItem.Cast<VariantTreeElement>().Variant.Owner.name == Data.name) // different names in carousel m_Name sometimes
+                if (CarouselItem.Variant != null && CarouselItem.Variant.Owner == Data) // different names in PODs & carousel m_Name sometimes, also ref compare is faster
                     return true;
             }
-
             return false;
         }
 
