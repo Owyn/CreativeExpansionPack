@@ -31,9 +31,12 @@ using System.Text.RegularExpressions;
 using Il2CppSystem.Threading;
 using UnityEngine.Playables;
 using FraggleExpansion;
+using System.Xml.XPath;
+using System.Reflection.Emit;
 
 namespace FraggleExpansion.Patches.Creative
 {
+
     public class FeaturesPatches
     {
         /*[HarmonyPatch(typeof(FallguyCustomisationHandler), nameof(FallguyCustomisationHandler.UpdateCostumeOption)), HarmonyPrefix]
@@ -94,8 +97,39 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
+        //int LevelEditorPlaceableObject::GetCost(bool includeCostOfGroupObjects, bool forClone)
+
+        // CMSFraggleBudgetSchema
+        // CMSFraggleObstacleSettings
+        //[HarmonyPatch(typeof(PlaceableObjectCostHandler), nameof(PlaceableObjectCostHandler.GetBaseCost))]
+
+        //[HarmonyPatch(typeof(CMSFraggleBudgetSchema), nameof(CMSFraggleBudgetSchema.Stock), MethodType.Setter)] // disable icon
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.GetCost))]
+        public static System.Collections.Generic.IEnumerable<CodeInstruction> Return_Minus_One(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new System.Collections.Generic.List<CodeInstruction>(2)
+            {
+                new CodeInstruction(OpCodes.Ldc_I4_M1), // push -1
+                new CodeInstruction(OpCodes.Ret)
+            };
+            return codes.AsEnumerable();
+        }
+
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.IsFloorOverlappingFloor), MethodType.Getter)]
+        public static System.Collections.Generic.IEnumerable<CodeInstruction> Return_False(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new System.Collections.Generic.List<CodeInstruction>(2)
+            {
+                new CodeInstruction(OpCodes.Ldc_I4_0), // push false (0)
+                new CodeInstruction(OpCodes.Ret)
+            };
+            return codes.AsEnumerable();
+        }
+
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
-        public static bool DeletionForBraindeadStartLine(LevelEditorPlaceableObject __instance, out bool __result)
+        public static bool CanBeDeleted(LevelEditorPlaceableObject __instance, out bool __result)
         {
             switch (__instance.ObjectDataOwner.name)
             {
@@ -119,17 +153,135 @@ namespace FraggleExpansion.Patches.Creative
             return false;
         }
 
-        [HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.PostLoadObjects)), HarmonyPostfix]
-        public static void PostLoadObjects(LevelLoader __instance)
+        /*[HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.ValidateUGCSchema)), HarmonyPostfix]
+        public static void ValidateUGCSchema() // after post load objects
         {
-            Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
-            Main.Instance.CountEndLines();
+            Main.Instance.SetUp(); // if we do it later than this - standard prefabs gonna get used for existing obj
+        }*/
+
+        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.GetStartAndEndPlatforms)), HarmonyPostfix]
+        public static void GetStartAndEndPlatforms() // after ReloadSkybox()
+        {
+            if (!Main.Instance.Setup_done)
+            {
+                if (FraggleExpansionData.AddUnusedObjects)
+                {
+                    Main.Instance.AddCustomObjectsToCurrentList();
+                }
+                if (FraggleExpansionData.AddAllObjects)
+                {
+                    Main.Instance.AddAllObjectsToCurrentList();
+                }
+                //Main.Instance.SetUp(); // for newly-created levels we can do it this late
+                if (FraggleExpansionData.BypassBounds)
+                {
+                    LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+                }
+                FraggleExpansionData.bWalls = LevelEditorWallControllerSettings.Instance.BetaWalls;
+                FraggleExpansionData.bWallPillars = LevelEditorWallControllerSettings.Instance._combinedBetaPillars.Cast<PlaceableVariant_Wall>();
+                Main.Instance.Setup_done = true;
+                Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
+                Main.Instance.CountEndLines();
+                var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
+                Btns[4]._nameLocKey = "Center Camera";
+                Btns[2]._nameLocKey = "Ghost Blocks";
+                Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
+                Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
+                Btns[4].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
+                Btns[2].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True"); // Clipping
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetToggleValue)), HarmonyPostfix]
+        public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool newVal)
+        {
+            //Main.Instance.Log.LogMessage(__instance.NameKey);
+            switch(__instance.NameKey)
+            {
+                case "Ghost Blocks":
+                    FraggleExpansionData.GhostBlocks = newVal;
+                    myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = newVal.ToString();
+                    myXml.Instance.Save();
+                    break;
+                case "Center Camera":
+                    myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = newVal.ToString();
+                    myXml.Instance.Save();
+                    break;
+                case "wle_object_snap":
+                    myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value = newVal.ToString();
+                    myXml.Instance.Save();
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        // ScriptableObjects.PlaceableVariant_Prefab LevelEditor.LevelEditorWallControllerSettings::GetWallPrefabFromLength(float desiredLength, bool useBetaWalls)
+        //- __instance: WallControllerSettings(LevelEditor.LevelEditorWallControllerSettings)
+
+        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.SelectObject)), HarmonyPostfix]
+        public static void SelectObject(LevelEditorPlaceableObject __instance)
+        {
+            switch (__instance.name)
+            {
+                case "Placeable_Wall_Inflatable_Vanilla_Post_Combined_beta(Clone)":
+                    LevelEditorWallControllerSettings.Instance._walls = FraggleExpansionData.bWalls;
+                    LevelEditorWallControllerSettings.Instance._combinedPillars = FraggleExpansionData.bWallPillars;
+                    break;
+                case "Placeable_Wall_Inflate_Post_End(Clone)":
+                    LevelEditorWallControllerSettings.Instance._walls = FraggleExpansionData.bWalls;
+                    if (FraggleExpansionData.vWallPillars) LevelEditorWallControllerSettings.Instance._combinedPillars = FraggleExpansionData.vWallPillars;
+                    break;
+                case "Placeable_Wall_Inflatable_Retro_Post_Combined(Clone)":
+                    if(!FraggleExpansionData.dWallPillars)
+                    {
+                        FraggleExpansionData.dWallPillars = __instance.ObjectDataOwner.objectVariants[0].Cast<PlaceableVariant_Wall>();
+                        FraggleExpansionData.dWalls = new Il2CppSystem.Collections.Generic.List<PlaceableVariant_Wall>(5);
+                        FraggleExpansionData.dWalls.Add(__instance.ObjectDataOwner.objectVariants[1].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.dWalls.Add(__instance.ObjectDataOwner.objectVariants[2].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.dWalls.Add(__instance.ObjectDataOwner.objectVariants[3].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.dWalls.Add(__instance.ObjectDataOwner.objectVariants[4].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.dWalls.Add(__instance.ObjectDataOwner.objectVariants[5].Cast<PlaceableVariant_Wall>());
+                    }
+                    LevelEditorWallControllerSettings.Instance._walls = FraggleExpansionData.dWalls;
+                    LevelEditorWallControllerSettings.Instance._combinedPillars = FraggleExpansionData.dWallPillars;
+                    break;
+                case "Placeable_Wall_Inflatable_Vanilla_Post_Combined(Clone)":
+                    if (!FraggleExpansionData.vWallPillars)
+                    {
+                        FraggleExpansionData.vWallPillars = __instance.ObjectDataOwner.objectVariants[0].Cast<PlaceableVariant_Wall>();
+                        FraggleExpansionData.vWalls = new Il2CppSystem.Collections.Generic.List<PlaceableVariant_Wall>(5);
+                        FraggleExpansionData.vWalls.Add(__instance.ObjectDataOwner.objectVariants[1].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.vWalls.Add(__instance.ObjectDataOwner.objectVariants[2].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.vWalls.Add(__instance.ObjectDataOwner.objectVariants[3].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.vWalls.Add(__instance.ObjectDataOwner.objectVariants[4].Cast<PlaceableVariant_Wall>());
+                        FraggleExpansionData.vWalls.Add(__instance.ObjectDataOwner.objectVariants[5].Cast<PlaceableVariant_Wall>());
+                    }
+                    LevelEditorWallControllerSettings.Instance._walls = FraggleExpansionData.vWalls;
+                    LevelEditorWallControllerSettings.Instance._combinedPillars = FraggleExpansionData.vWallPillars;
+                    break;
+                default:
+                    return;
+            }
         }
     }
 
     public class BypassesPatches
     {
-        [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.CanSelectMore), MethodType.Getter), HarmonyPrefix]
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(LevelEditorMultiSelectionHandler), nameof(LevelEditorMultiSelectionHandler.CanSelectMore), MethodType.Getter)]
+        [HarmonyPatch(typeof(LevelEditorStateReticleBase), nameof(LevelEditorStateReticleBase.CanPlaceSelectedObject))]
+        public static System.Collections.Generic.IEnumerable<CodeInstruction> Return_False(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new System.Collections.Generic.List<CodeInstruction>(2)
+            {
+                new CodeInstruction(OpCodes.Ldc_I4_1), // push true (1)
+                new CodeInstruction(OpCodes.Ret)
+            };
+            return codes.AsEnumerable();
+        }
+
+        /*[HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.CanSelectMore), MethodType.Getter), HarmonyPrefix]
         public static bool RemoveMaxMultiSelect(out bool __result)
         {
             __result = true;
@@ -141,16 +293,7 @@ namespace FraggleExpansion.Patches.Creative
         {
             __result = true;
             return !FraggleExpansionData.CanClipObjects;
-        }
-
-        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.SetupMapBoundsAndVisuals)), HarmonyPostfix] // fires after set_MapPlacementBounds
-        public static void MapPlacementBounds(LevelEditorManager __instance, Vector3 mapSize)
-        {
-            if (FraggleExpansionData.BypassBounds)
-            {
-                __instance.MapPlacementBounds = new Bounds(__instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
-            }
-        }
+        }*/
 
         // ook, this removes the "startline has changed" text but nothing more, it still restricts to 20 players...
         /*[HarmonyPatch(typeof(LevelEditorManagerProxy), nameof(LevelEditorManagerProxy.CheckStartlineUpdateNotifications)), HarmonyPrefix]
@@ -191,10 +334,13 @@ namespace FraggleExpansion.Patches.Creative
                 //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
                 //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
                 if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false);  }
+                if (!Main.Instance.Preprocessed) Main.Instance.Preproccess_POD_prefabs(); //  && (FraggleExpansionData.AddAllObjects || FraggleExpansionData.AddUnusedObjects)
             }
             else if (scene.name == "FallGuy_Editor")
             {
-                Main.Instance.SetUp();
+                //if (!Main.Instance.Preprocessed) Main.Instance.ManageAllCurrentObjects();
+                Main.Instance.Setup_done = false;
+                //Main.Instance.Preprocessed = false; // do we need to do it every map reload? - we don't
             }
 
         }
@@ -217,7 +363,7 @@ namespace FraggleExpansion.Patches.Creative
         }
 
         // the SODIUM :-)
-        [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
+        /*[HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
         public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
         {
             //Main.Instance.Log.LogMessage(__result);
@@ -226,7 +372,7 @@ namespace FraggleExpansion.Patches.Creative
                 __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
             }
             //Main.Instance.Log.LogMessage(__result);
-        }
+        }*/
 
         // LevelEditorManagerIO.SelectedMusic
         /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
@@ -237,7 +383,6 @@ namespace FraggleExpansion.Patches.Creative
             __result = "MUS_InGame_Bean_Thieves";
             return true;
         }*/
-
         [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.AddToSelection)), HarmonyPostfix]
         public static void AddToSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
         {
@@ -379,11 +524,19 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
         {
-            if(FraggleExpansionData.GhostBlocks && unseparatedSize.y > 22.0F) // spooky moment detected
+            if(unseparatedSize.y > 22.0F) // spooky moment detected
             {
                 //Main.Instance.Log.LogMessage(__instance.name);
                 //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + unseparatedSize.y);
-                unseparatedSize.y = 2.0F;
+                if (FraggleExpansionData.GhostBlocks)
+                { 
+                    unseparatedSize.y = 2.0F; 
+                }
+                else // stop him, he's breaking the laws of physics!
+                {
+                    __instance.ApplyDepthToFloor(21, true);
+                    return false;
+                }
             }
             /*if (FraggleExpansionData.snapSeparatorSize != 0.025F) // I don't think this does anything useful
             {
