@@ -362,8 +362,16 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
+        // publish:
+        // FG.Common.UGCNetworking.UGCNetworkRequests::CreateUpdateLevelStateRequest(FG.Common.UGCNetworking.UpdateLevelStateParameters parameters)
+        // void LevelEditorLevel::Publish(bool tryUploadThumbnail, FG.Common.UGCNetworking.ResponseHandler customHandler)
+        // save:
+        // FG.Common.UGCNetworking.UGCNetworkRequests::CreateUpdateDraftRequest(FG.Common.UGCNetworking.UpdateDraftParameters parameters)
+        // void LevelEditorLevel::UpdateDraft(FG.Common.UGCNetworking.ResponseHandler onCompleteCallBack)
+        // public unsafe UpdateDraftParameters(string shareCode, string levelJSON, string levelName, string levelDescription, string levelTags, Dictionary<string, Il2CppSystem.Object> levelConfig)
+
         // the SODIUM :-)
-        /*[HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix]
+        /*[HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix] // or ConvertAndPerformLevelDataUpgradeIfRequired
         public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
         {
             //Main.Instance.Log.LogMessage(__result);
@@ -545,12 +553,34 @@ namespace FraggleExpansion.Patches.Creative
             return true; // run the original f
         }
 
-        [HarmonyPatch(typeof(LevelEditorActiveObjectBase), nameof(LevelEditorActiveObjectBase.CacheObjectPlacedPosAndRot)), HarmonyPostfix]
+       [HarmonyPatch(typeof(LevelEditorActiveObjectBase), nameof(LevelEditorActiveObjectBase.CacheObjectPlacedPosAndRot)), HarmonyPostfix]
         public static void CacheObjectPlacedPosAndRot(LevelEditorActiveObjectBase __instance)
         {
             var Buoyancy = __instance.GetComponent<LevelEditorGenericBuoyancy>();
             if (Buoyancy)
                 Buoyancy._placedPositionRotationCached = true; // no more floating away // MT you forgot this shiz!
         }
+        // edit - it works for entering and leaving explore state but the map auto-saving when publishing still uses live position, not the cached one!!
+
+        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.ShowPublishPopUp)), HarmonyPrefix]
+        public static bool ShowPublishPopUp(LevelEditorManager __instance)
+        {
+            var flies = GameObject.FindObjectsOfType<LevelEditorGenericBuoyancy>();
+            foreach (var fly in flies)
+            {
+                //Main.Instance.Log.LogMessage("changing pos from: " + fly._placedPosition.ToString() + "to: " + fly.CachedGameObject.transform.position.ToString());
+                fly.ResetMoveAndRotate();
+                fly.ResetBuoyancy();
+            }
+            return true;
+        }
+
+        [HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.InstantiateFromJSON)), HarmonyPostfix]
+        public static void InstantiateFromJSON(LevelLoader __instance, UGCObjectDataSchema schema, bool includeIDs, GameObject __result) // after InstantiateObject -> this -> LoadObject_Create
+        {
+            var original = schema.Name;
+            var resulting = __result.name;
+            if(original != resulting) Main.Instance.Log.LogMessage("MISMATCH ERROR" + ": org: " + original + " , result: " + resulting + ", org GUID: " + schema.GUID);
+        }
     }
- }
+}
