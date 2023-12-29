@@ -259,32 +259,11 @@ namespace FraggleExpansion
             }*/
         }
 
-        PlaceableObjectData PrevOwner = null;
         public int itemID = 1000;
         public void AddCustomObjectsToCurrentList()
         {
             itemID = 1000;
-            PrevOwner = null;
-            foreach (string sData in FraggleExpansionData.AddObjectData)
-            {
-                AddObjectToCurrentList(sData, LevelEditorPlaceableObject.Category.Advanced, 0, itemID);
-                itemID++;
-            }
-        }
-        public void AddAllObjectsToCurrentList()
-        {
-            itemID = 1000;
-            PrevOwner = null;
-            foreach (var el in AssetRegistry.Instance._registry.Keys) // can't go by GUID values cuz can't Ref error
-            {
-                AddObjectToCurrentList(el, LevelEditorPlaceableObject.Category.Advanced, 0, itemID);
-                itemID++;
-            }
-        }
-
-        public void AddObjectToCurrentList(string AssetRegistryName, LevelEditorPlaceableObject.Category Category = LevelEditorPlaceableObject.Category.Advanced, int DefaultVariantIndex = 0, int ID = 0)
-        {
-            try
+            foreach (string AssetRegistryName in FraggleExpansionData.AddObjectData)
             {
                 AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
                 if (Loadable.Asset == null)
@@ -294,9 +273,37 @@ namespace FraggleExpansion
                     return;
                 }
                 PlaceableObjectData Owner = Loadable.Asset.Cast<PlaceableVariant_Base>().Owner;
+                AddObjectToCurrentList(Owner, LevelEditorPlaceableObject.Category.Advanced, 0, itemID);
+                itemID++;
+            }
+        }
+        public void AddAllObjectsToCurrentList()
+        {
+            itemID = 1000;
+            //foreach (var el in AssetRegistry.Instance._registry.Keys) // can't go by GUID values cuz can't Ref error
+            //Log.LogMessage("AllValidPODs size: " + AllValidPODs.Count);
+            foreach (var el in AllValidPODs)
+            {
+                AddObjectToCurrentList(el, LevelEditorPlaceableObject.Category.Advanced, 0, itemID);
+                itemID++;
+            }
+        }
+
+        public void AddObjectToCurrentList(PlaceableObjectData Owner, LevelEditorPlaceableObject.Category Category = LevelEditorPlaceableObject.Category.Advanced, int DefaultVariantIndex = 0, int ID = 0)
+        {
+            try
+            {
+                /*AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
+                if (Loadable.Asset == null)
+                {
+                    //Loadable.Unload(); // what's the difference tho?
+                    Loadable.Dispose();
+                    return;
+                }
+                PlaceableObjectData Owner = Loadable.Asset.Cast<PlaceableVariant_Base>().Owner;*/
+
                 var CurrentObjectTreeList = ThemeManager.CurrentThemeData.ObjectList.m_TreeElements;
-                if (Owner == PrevOwner || Owner == null) { /*Log.LogMessage("asset " + AssetRegistryName + " has no owner data");*/ return; }
-                PrevOwner = Owner;
+                if (Owner == null) { /*Log.LogMessage("asset " + AssetRegistryName + " has no owner data");*/ return; }
                 if (HasCarouselDataForObject(Owner)) { /*Log.LogMessage("object " + AssetRegistryName + " is already in the list " +Owner.name);*/ return; }
                 //Loadable.LoadBlocking(); // makes objects which usually don't get loaded load, but categories now carry over to standard objects - how to check if we need to call it? - haven't found a way.... // ok, we don't need this anymore after Preprocessing f()
                 if (Owner.name == "POD_FanPlatform_OFF_Vanilla" || Owner.name == "POD_FanPlatform_ON_Vanilla") { return; } // blacklist // these guys somehow make digital maps softlock
@@ -409,6 +416,7 @@ namespace FraggleExpansion
             return false;
         }
 
+        public List<PlaceableObjectData> AllValidPODs = new();
         public bool Preprocessed = false;
         public void Preproccess_POD_prefabs()
         {
@@ -427,6 +435,7 @@ namespace FraggleExpansion
                     if (Owner == null || LastOwner == Owner) continue;
 
                     LastOwner = Owner;
+                    AllValidPODs.Add(Owner);
                     Manage_POD(Owner);
                 }
             }
