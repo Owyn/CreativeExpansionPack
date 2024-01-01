@@ -1,4 +1,4 @@
-﻿using FG.Common.LevelEditor.Serialization;
+using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -123,6 +123,18 @@ namespace FraggleExpansion.Patches.Creative
             var codes = new System.Collections.Generic.List<CodeInstruction>(2)
             {
                 new CodeInstruction(OpCodes.Ldc_I4_0), // push false (0)
+                new CodeInstruction(OpCodes.Ret)
+            };
+            return codes.AsEnumerable();
+        }
+
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(PlaceableObjectCostHandler), nameof(PlaceableObjectCostHandler.GetRemainingStockCount))] // fix multiselect copy
+        public static System.Collections.Generic.IEnumerable<CodeInstruction> Return_9999(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new System.Collections.Generic.List<CodeInstruction>(2)
+            {
+                new CodeInstruction(OpCodes.Ldc_I4, 9999), // push int
                 new CodeInstruction(OpCodes.Ret)
             };
             return codes.AsEnumerable();
