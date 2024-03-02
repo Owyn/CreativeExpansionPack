@@ -16,7 +16,7 @@
 > - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `\BepinEx\plugins\CreativeExpansionPack\ExpansionData.txt` config file)
 > - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
 > - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
-> - Select All & Select All by Type & Select All by Type & Scale features
+> - Select All & Select All by Type & Select All Scale & Select All in Proximity features
 > - You can set max players to 40 even with a single small start-line
 
 **What features does Creative Expansion Pack include?**
@@ -31,8 +31,16 @@
 > - - building outside the map bounds area limit
 > - - setting max players to 40 with just a single small start-line
 > - and some additional **features** such as:
-> - - select all and select all by type (hold left `shift` or `ctrl` when multi-(de)selecting)
-> - - ghost blocks (turned off by default so you don't accidentially make em - turn it on in the `ExpansionData.txt` config file, then increase `height` of a floor or smth else to more than the standard limit of 20 ticks via `R` hotkey)
+> - - select all - hold left `shift` when multi-(de)selecting)
+>   -  select all by type - hold left `ctrl` when multi-(de)selecting)
+>   -  select all by scale - hold both `shift` & `ctrl` when multi-(de)selecting)
+>   -  select all in Proximity - hold `` ` `` (console-key) when multi-selecting
+>      - increase proximity radius by 5 - `` 1 `` + deselect
+>      - DEcrease proximity radius by 5 - `` 2 `` + deselect
+>      - increase proximity radius by 1 - `` 3 `` + deselect
+>      - DEcrease proximity radius by 1 - `` 4 `` + deselect
+>      - reset proximity radius to default 10 - `` ` `` + deselect
+> - - ghost blocks (turned on the radial in-game option, then increase `height` of a floor or smth else to more than the standard limit of 20 ticks via `R` hotkey)
 > - - display your last position
 > - and even **bugfixes** for the original map editor!:
 > - - floating objects such as signs and arrows no longer move randomly and get saved like that
