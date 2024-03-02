@@ -1,4 +1,4 @@
-using FG.Common.LevelEditor.Serialization;
+﻿using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -33,6 +33,9 @@ using UnityEngine.Playables;
 using FraggleExpansion;
 using System.Xml.XPath;
 using System.Reflection.Emit;
+using System.ComponentModel;
+using BepInEx.Unity.IL2CPP.Utils;
+using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -149,6 +152,7 @@ namespace FraggleExpansion.Patches.Creative
                 case "POD_Rule_Floor_Start_Retro": // digital
                 case "POD_Rule_FloorStart_Vanilla": // beta
                 case "POD_Rule_Floor_Start_Survival": // survival
+                case "POD_FloorStart_Survival_SpawnPoint_Vanilla": // survival point
                     if (Main.Instance.CountStartLines() <= 1) // last one
                     {
                         __result = false;
@@ -198,6 +202,7 @@ namespace FraggleExpansion.Patches.Creative
                 Btns[4]._nameLocKey = "Center Camera";
                 Btns[2]._nameLocKey = "Ghost Blocks";
                 Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
+                Btns[3]._descriptionLocKey = "Shift + Select = select all\nCtrl + Select = select all objects of the same type\nChrl + Shift + Select = select all objects of the same scale\n(console-key) ` + Select = select all in proximity\n` or 1 or 2 or 3 or 4 + DEselect = reset \\ + \\ - the proximity";
                 Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
                 Btns[4].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
                 Btns[2].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True"); // Clipping
@@ -283,6 +288,7 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyTranspiler]
         [HarmonyPatch(typeof(LevelEditorMultiSelectionHandler), nameof(LevelEditorMultiSelectionHandler.CanSelectMore), MethodType.Getter)]
         [HarmonyPatch(typeof(LevelEditorStateReticleBase), nameof(LevelEditorStateReticleBase.CanPlaceSelectedObject))]
+        [HarmonyPatch(typeof(PlaceableObjectCostHandler), nameof(PlaceableObjectCostHandler.HasStock))] // CanPlaceMoreOfThisObj
         public static System.Collections.Generic.IEnumerable<CodeInstruction> Return_False(System.Collections.Generic.IEnumerable<CodeInstruction> instructions)
         {
             var codes = new System.Collections.Generic.List<CodeInstruction>(2)
@@ -321,7 +327,17 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditorOptionsSliderSet), nameof(LevelEditorOptionsSliderSet.SoftLockSliderValue), MethodType.Setter), HarmonyPrefix]
         public static bool Unlock_maxplayers(LevelEditorOptionsSliderSet __instance, int value)
         {
-            if (value == 20 || value == 0) { return false; }
+            //Main.Instance.Log.LogMessage("SoftLockSliderValue: " + value + " from Max: " + __instance.Max); // Max is buggy okay...
+            if (value == 0) // you broke it
+            {
+                __instance.ResetCurrentValue(); // we fixed it // not fully tho, you have to reselect everything now
+                //__instance.ResetValue(); // doesn't help
+                //__instance.Max = 40;
+                //__instance.UpperValue = 40;
+                //__instance.upperLimit = (Nullable<int>)40;
+                return false;
+            }
+            else if (value < 40) { return false; }
             return true;
         }
     }
@@ -403,17 +419,20 @@ namespace FraggleExpansion.Patches.Creative
             __result = "MUS_InGame_Bean_Thieves";
             return true;
         }*/
+
+        public static float fDistance_threshold = 10.0f;
         [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.AddToSelection)), HarmonyPostfix]
         public static void AddToSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
         {
+            bool SelectNearby = Input.GetKey(KeyCode.BackQuote);
             bool SelectAllofType = Input.GetKey(KeyCode.LeftControl);
             bool SelectAll = Input.GetKey(KeyCode.LeftShift);
-            if ((SelectAll || SelectAllofType) && record)
+            if ((SelectAll || SelectAllofType || SelectNearby) && record)
             {
                 var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
                 foreach (LevelEditorPlaceableObject o in stuff)
                 {
-                    if (o.ParentObject != null)
+                    if (o.transform.parent != null)
                     {
                         continue; // it's a trap
                     }
@@ -431,32 +450,71 @@ namespace FraggleExpansion.Patches.Creative
                             __instance.AddToSelection(o, options, false);
                         }
                     }
-                    else
+                    else if (SelectAll)
                     {
                         __instance.AddToSelection(o, options, false);
+                    }
+                    else if (SelectNearby && Vector3.Distance(obj.transform.position, o.transform.position) <= fDistance_threshold)
+                    {
+                        __instance.AddToSelection(o, options, false);
+                        //Main.Instance.Log.LogMessage("added nearby object which is this far: " + Vector3.Distance(obj.transform.position, o.transform.position));
                     }
                 }
             }
         }
 
-        [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.RemoveFromSelection)), HarmonyPostfix]
-        public static void RemoveFromSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
+        [HarmonyPatch(typeof(LevelEditor.LevelEditorMultiSelectionHandler), nameof(LevelEditor.LevelEditorMultiSelectionHandler.RemoveFromSelection)), HarmonyPrefix]
+        public static bool RemoveFromSelection(LevelEditorMultiSelectionHandler __instance, LevelEditorPlaceableObject obj, int options, bool record = true, bool unselect = false)
         {
-            if (Input.GetKey(KeyCode.LeftControl) && record) // hold it
+            if (record)
             {
-                var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
-                foreach (LevelEditorPlaceableObject o in stuff)
+                if (Input.GetKey(KeyCode.LeftControl)) // hold it
                 {
-                    if (obj.name == o.name)
+                    var stuff = UnityEngine.Object.FindObjectsOfType<LevelEditorPlaceableObject>();
+                    foreach (LevelEditorPlaceableObject o in stuff)
                     {
-                        if (Input.GetKey(KeyCode.LeftShift) && (obj.transform.localScale != o.transform.localScale))
+                        if (obj.name == o.name)
                         {
-                            continue;
+                            if (Input.GetKey(KeyCode.LeftShift) && (obj.transform.localScale != o.transform.localScale))
+                            {
+                                continue;
+                            }
+                            __instance.RemoveFromSelection(o, options, false, true);
                         }
-                        __instance.RemoveFromSelection(o, options, false, true);
                     }
                 }
+                else if (Input.GetKey(KeyCode.BackQuote))
+                {
+                    //Main.Instance.Log.LogMessage("RESET dist radius ");
+                    fDistance_threshold = 10.0f;
+                    //__instance.RemoveFromSelection(obj, options, false, unselect); // lets run it twice to update text
+                }
+                else if (Input.GetKey(KeyCode.Alpha1))
+                {
+                    //Main.Instance.Log.LogMessage("+10 dist radius ");
+                    fDistance_threshold += 5.0f;
+                    //__instance.RemoveFromSelection(obj, options, false, unselect); // lets run it twice to update text
+                }
+                else if (Input.GetKey(KeyCode.Alpha2))
+                {
+                    //Main.Instance.Log.LogMessage("-10 dist radius ");
+                    fDistance_threshold -= 5.0f;
+                    //__instance.RemoveFromSelection(obj, options, false, unselect); // lets run it twice to update text
+                }
+                else if (Input.GetKey(KeyCode.Alpha3))
+                {
+                    //Main.Instance.Log.LogMessage("+1 dist radius ");
+                    fDistance_threshold += 1.0f;
+                    //__instance.RemoveFromSelection(obj, options, false, unselect); // lets run it twice to update text
+                }
+                else if (Input.GetKey(KeyCode.Alpha4))
+                {
+                    //Main.Instance.Log.LogMessage("-1 dist radius ");
+                    fDistance_threshold -= 1.0f;
+                    //__instance.RemoveFromSelection(obj, options, false, unselect); // lets run it twice to update text
+                }
             }
+            return true;
         }
 
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPrefix]
@@ -548,7 +606,7 @@ namespace FraggleExpansion.Patches.Creative
             {
                 //Main.Instance.Log.LogMessage(__instance.name);
                 //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + unseparatedSize.y);
-                if (FraggleExpansionData.GhostBlocks)
+                if (FraggleExpansionData.GhostBlocks || !Main.Instance.Setup_done) // only for newly placed objects, not ones loaded with the map
                 { 
                     unseparatedSize.y = 2.0F; 
                 }
@@ -587,12 +645,13 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
-        [HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.InstantiateFromJSON)), HarmonyPostfix]
+        /*[HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.InstantiateFromJSON)), HarmonyPostfix]
         public static void InstantiateFromJSON(LevelLoader __instance, UGCObjectDataSchema schema, bool includeIDs, GameObject __result) // after InstantiateObject -> this -> LoadObject_Create
         {
             var original = schema.Name;
             var resulting = __result.name;
             if(original != resulting) Main.Instance.Log.LogMessage("MISMATCH ERROR" + ": org: " + original + " , result: " + resulting + ", org GUID: " + schema.GUID);
-        }
+        }*/
+        // ok, this doesn't catch object corruptions, tested
     }
 }

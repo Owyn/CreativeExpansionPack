@@ -1,4 +1,5 @@
 ﻿using FG.Common;
+using FraggleExpansion.Patches.Creative;
 using HarmonyLib;
 
 namespace FraggleExpansion.Patches.Reticle
@@ -45,7 +46,7 @@ namespace FraggleExpansion.Patches.Reticle
         [HarmonyPatch(typeof(LevelEditorObjectInfoViewModel), nameof(LevelEditorObjectInfoViewModel.ObjectsSelectedText), MethodType.Getter), HarmonyPrefix]
         public static bool RemoveMultiselectLimitText(LevelEditorObjectInfoViewModel __instance, out string __result)
         {
-            __result = LevelEditor.LevelEditorMultiSelectionHandler.Selection().Count + __instance._localisedStrings.GetString("wle_objectsselected").Replace("<number>", "");
+            __result = LevelEditor.LevelEditorMultiSelectionHandler.Selection().Count + __instance._localisedStrings.GetString("wle_objectsselected").Replace("<number>", "") + ((MainFeaturePatches.fDistance_threshold != 10.0f) ? " R: "+MainFeaturePatches.fDistance_threshold : "");
             return false;
         }
         #endregion
