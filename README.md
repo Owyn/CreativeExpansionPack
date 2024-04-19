@@ -6,9 +6,9 @@
 
 ## Questions and Answers
 
-**Is there a discord for this mod?**
+**Is there a disc0rd for this mod?**
 
-> There's my Fall Guys **Map Making discord**: https://discord.com/invite/jXBFcwqtn3 
+> There's my Fall Guys **Map Making disc0rd**: https://dsc.gg/CEP  
 
 **How is CEP CE different from just CEP?**
 
