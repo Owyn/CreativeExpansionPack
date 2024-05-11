@@ -38,6 +38,7 @@ using System.Runtime.Serialization.Json;
 using System.Linq;
 using System.Text;
 using static UnityEngine.AddressableAssets.Utility.SerializationUtilities;
+using static Wushu.Framework.DebugDrawThreeJs;
 
 namespace FraggleExpansion
 {
@@ -46,7 +47,7 @@ namespace FraggleExpansion
     {
         public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
         public static Main Instance;
-        PlaceableObjectData BetaStart, DigitalStart, ClassicStart, SurvivalStart, BetaEnd, DigitalEnd, ClassicEnd;
+        PlaceableObjectData BetaStart, DigitalStart, ClassicStart, SurvivalStart, SurvivalStartPoint, BetaEnd, DigitalEnd, ClassicEnd;
         //public SlimeGamemodesManager _SlimeGamemodeManager;
 
         public override void Load()
@@ -90,17 +91,19 @@ namespace FraggleExpansion
         
         public int CountStartLines()
         {
-            int nClassic, nDigital, nBeta, nSurvival;
+            int nClassic, nDigital, nBeta, nSurvival, nSurvivalP;
             if (ClassicStart) { nClassic = LevelEditorManager.Instance.CostManager.GetCount(ClassicStart); } else { nClassic = 0; }
             if (DigitalStart) { nDigital = LevelEditorManager.Instance.CostManager.GetCount(DigitalStart); } else { nDigital = 0; }
             if (BetaStart) { nBeta = LevelEditorManager.Instance.CostManager.GetCount(BetaStart); } else { nBeta = 0; }
             if (SurvivalStart) { nSurvival = LevelEditorManager.Instance.CostManager.GetCount(SurvivalStart); } else { nSurvival = 0; }
-            //Log.LogMessage("found starts: " + (nClassic + nDigital + nBeta + nSurvival));
+            if (SurvivalStartPoint) { nSurvivalP = LevelEditorManager.Instance.CostManager.GetCount(SurvivalStartPoint); } else { nSurvivalP = 0; }
+            //Log.LogMessage("found starts: " + (nClassic + nDigital + nBeta + nSurvival + nSurvivalP));
             if (nClassic > 0) { ThemeManager.CurrentStartGantry = ClassicStart; }
             else if (nDigital > 0) { ThemeManager.CurrentStartGantry = DigitalStart; }
             else if (nBeta > 0) { ThemeManager.CurrentStartGantry = BetaStart; }
             else if (nSurvival > 0) { ThemeManager.CurrentStartGantry = SurvivalStart; }
-            return nClassic + nDigital + nBeta + nSurvival;
+            else if (nSurvivalP > 0) { ThemeManager.CurrentStartGantry = SurvivalStartPoint; }
+            return nClassic + nDigital + nBeta + nSurvival + nSurvivalP;
         }
 
         public void CountEndLines()
@@ -135,13 +138,16 @@ namespace FraggleExpansion
                             CostHandler.CMSData.Stock = -1; // this disables the icon                         
                         }
                     }
-                    
-                    /*var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
-                    if (prefab_comp2) // wait nvm, MT devs were too lazy to edit prefabs this time
+
+                    if (FraggleExpansionData.RemoveDefaultScalingFeature)
                     {
-                        UnityEngine.Object.Destroy(prefab_comp2);
-                        Main.Instance.Log.LogMessage("destroyed LevelEditorScaleParameter for: " + TrueOwner.name + " v: " + Variant.name);
-                    }*/
+                        var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
+                        if (prefab_comp2) // wait nvm, MT devs were too lazy to edit prefabs this time // but now they've started doing it...
+                        {
+                            UnityEngine.Object.Destroy(prefab_comp2);
+                            //Main.Instance.Log.LogMessage("destroyed LevelEditorScaleParameter for: " + Owner.name + " v: " + Variant.name);
+                        }
+                    }
 
                     if (CostHandler._firstFree) // not needed anymore actually
                     {
@@ -182,12 +188,20 @@ namespace FraggleExpansion
             {
                 ClassicStart = Owner;
             }
+            else if (Owner.name == "POD_FloorStart_Survival_SpawnPoint_Vanilla")
+            {
+                SurvivalStartPoint = Owner;
+            }
             else if (Owner.name == "POD_Rule_Floor_Start_Survival")
             {
                 SurvivalStart = Owner;
                 Owner.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().EditorOnlyRenderers = null; // this makes it visible
                 Owner.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().collidersToDisable = null; // this makes it touchable
                 //Placeable.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().ParameterTypes = LevelEditorParametersManager.LegacyParameterTypes.None;
+            }
+            else if (Owner.name == "POD_UI_Trigger_Volume") // Owner.name == "POD_Drawable_Killzone_Common" || Owner.name == "POD_Drawable_Killzone_Gauntlet_Common" - can't make em visible easily
+            {
+                Owner.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().EditorOnlyRenderers = null; // this makes it visible
             }
             else if (Owner.name == "POD_Rule_FloorEnd_Vanilla")
             {
@@ -209,15 +223,15 @@ namespace FraggleExpansion
             {
                 Placeable.category = LevelEditorPlaceableObject.Category.Platforms;
             }*/
-            /*else if ((Placeable.name == "POD_Floating_Cannon_Revised_Vanilla" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
-            {
-                Prefab.AddComponent<LevelEditorReceiver>();
-                Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
-            }*/ // it makes maps not load
+                /*else if ((Placeable.name == "POD_Floating_Cannon_Revised_Vanilla" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
+                {
+                    Prefab.AddComponent<LevelEditorReceiver>();
+                    Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
+                }*/ // it makes maps not load
 
-            /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
-            if (Buoyancy)
-                UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
+                /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
+                if (Buoyancy)
+                    UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
         }
 
         public void Manage_GameObject(GameObject Prefab) // Prefab
@@ -236,13 +250,30 @@ namespace FraggleExpansion
                     UnityEngine.Object.Destroy(Drawable);
                     return;
                 }
-                if (Prefab.GetComponent<LevelEditorCheckpointFloorData>())
+                else if (POD_Name == "POD_UI_Trigger_Volume")
+                {
+                    var prefab_comp = Prefab.GetComponent<LevelEditorTransmitter>();
+                    if (prefab_comp)
+                    {
+                        UnityEngine.Object.Destroy(prefab_comp);
+                    }
+                    var prefab_comp2 = Prefab.GetComponent<LevelEditorTriggerableParameter>();
+                    if (prefab_comp2)
+                    {
+                        UnityEngine.Object.Destroy(prefab_comp2); // MT deleted\renamed settings & corrupted maps bruh
+                    }
+                    var prefab_comp3 = Prefab.GetComponent<LevelEditorCooldownParameter>();
+                    if (prefab_comp3)
+                    {
+                        UnityEngine.Object.Destroy(prefab_comp3);
+                    }
+                }
+                else if (Prefab.GetComponent<LevelEditorCheckpointFloorData>() && POD_Name != "POD_Drawable_CheckpointTriggerZone_Common")
                 {
                     Drawable._painterMaxSize = new Vector3(10000, 10000, 10000);
                     Drawable._canBePainterDrawn = true;
                     Drawable.FloorType = LevelEditorDrawableData.DrawableSemantic.FloorObject;
                     Drawable._restrictedDrawingAxis = LevelEditorDrawableData.DrawRestrictedAxis.Up;
-
                     UnityEngine.Object.Destroy(Prefab.GetComponent<LevelEditorFloorScaleParameter>());
                     Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = false;
                     return;
@@ -259,10 +290,10 @@ namespace FraggleExpansion
             }*/
         }
 
-        public int itemID = 1000;
+        public int itemID = 2000;
         public void AddCustomObjectsToCurrentList()
         {
-            itemID = 1000;
+            itemID = 2000;
             foreach (string AssetRegistryName in FraggleExpansionData.AddObjectData)
             {
                 AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(AssetRegistryName);
@@ -279,7 +310,7 @@ namespace FraggleExpansion
         }
         public void AddAllObjectsToCurrentList()
         {
-            itemID = 1000;
+            itemID = 2000;
             //foreach (var el in AssetRegistry.Instance._registry.Keys) // can't go by GUID values cuz can't Ref error
             //Log.LogMessage("AllValidPODs size: " + AllValidPODs.Count);
             foreach (var el in AllValidPODs)
@@ -317,15 +348,20 @@ namespace FraggleExpansion
                 string simpleName = Owner.name
                                     .Replace("POD_Inflatable_Vanilla_Wall_beta", "Inflatable")
                                     .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
+                                    .Replace("POD_FloorStart_Survival_SpawnPoint_Vanilla", "Start")
                                     .Replace("_Retro", "")
                                     .Replace("_Vanilla", "")
                                     .Replace("POD_Floor_Vinyl_Matt_2_2_Double_Height", "POD_Floor_Soft")
                                     .Replace("POD_Floor_Hard_Plastic", "POD_Floor_Soft")
                                     .Replace("Drawable_Ramp", "Ramp")
+                                    .Replace("POD_Hard_Wedge", "Primitive_Triangle")
                                     .Replace("POD_Drawable_Edge_", "")
                                     .Replace("POD_Curve", "Curve")
-                                    .Replace("FloorStart", "Floor_Start")
-                                    .Replace("FloorEnd", "Floor_End")
+                                    .Replace("POD_Rule_", "")
+                                    .Replace("FloorStart", "Start")
+                                    .Replace("Floor_Start", "Start")
+                                    .Replace("FloorEnd", "End")
+                                    .Replace("Floor_End", "End")
                                     .Replace("_Survival", "")
                                     .Replace("_Revised", "")
                                     .Replace("_1", "")
@@ -362,11 +398,12 @@ namespace FraggleExpansion
                                     .Replace("e_Post_End", "")
                                     .Replace("POD_Cube", "POD_Floor_Soft")
                                     .Replace("POD_Ramp", "POD_Drawable_Ramp")
+                                    .Replace("_Gauntlet", "")
                                     .Replace("_Future", "");
                 for (int i = CurrentObjectTreeList.Count - 1; i >= 0; i--)
                 {
                     var CarouselItem = CurrentObjectTreeList[i];
-                    if (CarouselItem.Variant != null && CarouselItem.Variant.Owner.name.Contains(simpleName))
+                    if (CarouselItem.Variant != null && CarouselItem.Variant.Owner.name.Contains(simpleName) && CarouselItem.Variant.Owner.name != "POD_Wall_Inflate_Post_End" && CarouselItem.Variant.Owner.name != "POD_Drawable_CheckpointTriggerZone_Common" && CarouselItem.name != "PrimitiveSpheres") // MT added "PrimitiveSpheres" #87 folder wrong, facepalm
                     {
                         if (CarouselItem.Variant.Owner.category != Owner.category)
                         {
@@ -378,11 +415,11 @@ namespace FraggleExpansion
                             CurrentObjectTreeList.Insert(i, new VariantTreeElement("Folder for " + Owner.name, 0, itemID));
                             CarouselItem.depth = 1;
                             i++; // our folder made it bigger
-                                 //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a new list " + i + " w: " + CarouselItem.name);
+                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a new list " + (i-1) + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name);
                         }
                         else
                         {
-                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a list " + i + " of " + CarouselItem.children.Count + " w: " + CarouselItem.name);
+                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a list " + i + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name);
                             //if (CarouselItem.parent.Cast<VariantTreeElement>().SelectedIndex != 0) CarouselItem.parent.Cast<VariantTreeElement>().SelectedIndex = 0; // Fans folder
                         }
                         CurrentObjectTreeList.Insert(i + 1, VariantElement); // place after it
