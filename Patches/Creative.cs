@@ -1,4 +1,4 @@
-﻿using FG.Common.LevelEditor.Serialization;
+using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -551,8 +551,8 @@ namespace FraggleExpansion.Patches.Creative
         //- __instance: PB_BasketFall_LevelEditor(Clone) (Levels.Obstacles.COMMON_SelfRespawner)
         //- Parameter 0 'fallbackRespawnTransform': SpawnPoint2(UnityEngine.Transform)
 
-        [HarmonyPatch(typeof(COMMON_SelfRespawner), nameof(COMMON_SelfRespawner.SetRespawnTransformAndOffset)), HarmonyPostfix]
-        public static void SetRespawnTransformAndOffset(COMMON_SelfRespawner __instance, Transform respawnTransform, Vector3 respawnOffset)
+        [HarmonyPatch(typeof(COMMON_SelfRespawner), nameof(COMMON_SelfRespawner.SetReferences), new[] { typeof(Transform), typeof(Vector3) }), HarmonyPostfix] // old SetRespawnTransformAndOffset
+        public static void SetReferences(COMMON_SelfRespawner __instance, Transform respawnTransform, Vector3 respawnOffset)
         {
             //var transf = __instance._respawnTransform; //SpawnPoint1 2 3
             //Main.Instance.Log.LogMessage(respawnTransform.name);
