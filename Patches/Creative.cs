@@ -36,6 +36,7 @@ using System.Reflection.Emit;
 using System.ComponentModel;
 using BepInEx.Unity.IL2CPP.Utils;
 using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
+using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -143,12 +144,12 @@ namespace FraggleExpansion.Patches.Creative
             return codes.AsEnumerable();
         }
 
-        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.CanBeDeleted)), HarmonyPrefix]
         public static bool CanBeDeleted(LevelEditorPlaceableObject __instance, out bool __result)
         {
             switch (__instance.ObjectDataOwner.name)
-            {
-                case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
+            {*/
+                /*case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
                 case "POD_Rule_Floor_Start_Retro": // digital
                 case "POD_Rule_FloorStart_Vanilla": // beta
                 case "POD_Rule_Floor_Start_Survival": // survival
@@ -158,8 +159,8 @@ namespace FraggleExpansion.Patches.Creative
                         __result = false;
                         return false;
                     }
-                    break;
-                case "POD_Rule_Floor_End_Revised_Vanilla": // classic
+                    break;*/
+                /*case "POD_Rule_Floor_End_Revised_Vanilla": // classic
                 case "POD_Rule_Floor_End_Retro": // digital
                 case "POD_Rule_FloorEnd_Vanilla": // beta
                     Main.Instance.CountEndLines();
@@ -167,7 +168,7 @@ namespace FraggleExpansion.Patches.Creative
             }
             __result = __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
             return false;
-        }
+        }*/
 
         /*[HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.ValidateUGCSchema)), HarmonyPostfix]
         public static void ValidateUGCSchema() // after post load objects
@@ -196,9 +197,11 @@ namespace FraggleExpansion.Patches.Creative
                 FraggleExpansionData.bWalls = LevelEditorWallControllerSettings.Instance.BetaWalls;
                 FraggleExpansionData.bWallPillars = LevelEditorWallControllerSettings.Instance._combinedBetaPillars.Cast<PlaceableVariant_Wall>();
                 Main.Instance.Setup_done = true;
-                Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
-                Main.Instance.CountEndLines();
+                //Main.Instance.SetupStartLines();
+                //Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
+                //Main.Instance.CountEndLines();
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
+                Btns[5]._nameLocKey = "Lesser vertical & rotational step";
                 Btns[4]._nameLocKey = "Center Camera";
                 Btns[2]._nameLocKey = "Ghost Blocks";
                 Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
@@ -206,29 +209,35 @@ namespace FraggleExpansion.Patches.Creative
                 Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
                 Btns[4].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
                 Btns[2].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True"); // Clipping
+                Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/Precision").Value == "True"); // Precision
             }
         }
 
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetToggleValue)), HarmonyPostfix]
-        public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool newVal)
+        public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool isOn)
         {
             //Main.Instance.Log.LogMessage(__instance.NameKey);
             switch(__instance.NameKey)
             {
                 case "Ghost Blocks":
-                    FraggleExpansionData.GhostBlocks = newVal;
-                    myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = newVal.ToString();
+                    FraggleExpansionData.GhostBlocks = isOn;
+                    myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
                 case "Center Camera":
-                    myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = newVal.ToString();
+                    myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
                 case "wle_object_snap":
-                    myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value = newVal.ToString();
+                    myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value = isOn.ToString();
+                    myXml.Instance.Save();
+                    break;
+                case "Lesser vertical & rotational step":
+                    myXml.Instance.Data.XPathSelectElement("/States/Precision").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
                 default:
+                    Main.Instance.Log.LogMessage("LevelEditor_RadialMenuButtonDefinition -> SetToggleValue()  unknown button toggled: " + __instance.NameKey);
                     return;
             }
         }
@@ -328,7 +337,7 @@ namespace FraggleExpansion.Patches.Creative
         public static bool Unlock_maxplayers(LevelEditorOptionsSliderSet __instance, int value)
         {
             //Main.Instance.Log.LogMessage("SoftLockSliderValue: " + value + " from Max: " + __instance.Max); // Max is buggy okay...
-            if (value == 0) // you broke it
+            /*if (value == 0) // you broke it // MT fixed it??
             {
                 __instance.ResetCurrentValue(); // we fixed it // not fully tho, you have to reselect everything now
                 //__instance.ResetValue(); // doesn't help
@@ -336,8 +345,8 @@ namespace FraggleExpansion.Patches.Creative
                 //__instance.UpperValue = 40;
                 //__instance.upperLimit = (Nullable<int>)40;
                 return false;
-            }
-            else if (value < 40) { return false; }
+            }*/
+            if (value < 40) { return false; }
             return true;
         }
     }
