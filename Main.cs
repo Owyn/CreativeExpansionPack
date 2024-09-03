@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.IL2CPP;
 using HarmonyLib;
 using UnityEngine;
@@ -88,8 +88,17 @@ namespace FraggleExpansion
                 ManageAllCurrentObjects();
             }
         }*/
-        
-        public int CountStartLines()
+
+        /*public void SetupStartLines() // thx MT for implementing yet another CEP feature
+        {
+            if (!ThemeManager.CurrentStartGantries.Contains(ClassicStart)) { ThemeManager.CurrentStartGantries.Add(ClassicStart); }
+            if (!ThemeManager.CurrentStartGantries.Contains(DigitalStart)) { ThemeManager.CurrentStartGantries.Add(DigitalStart); }
+            if (!ThemeManager.CurrentStartGantries.Contains(BetaStart)) { ThemeManager.CurrentStartGantries.Add(BetaStart); }
+            if (!ThemeManager.CurrentStartGantries.Contains(SurvivalStart)) { ThemeManager.CurrentStartGantries.Add(SurvivalStart); }
+            if (!ThemeManager.CurrentStartGantries.Contains(SurvivalStartPoint)) { ThemeManager.CurrentStartGantries.Add(SurvivalStartPoint); }
+        }*/
+
+        /*public int CountStartLines()
         {
             int nClassic, nDigital, nBeta, nSurvival, nSurvivalP;
             if (ClassicStart) { nClassic = LevelEditorManager.Instance.CostManager.GetCount(ClassicStart); } else { nClassic = 0; }
@@ -104,15 +113,15 @@ namespace FraggleExpansion
             else if (nSurvival > 0) { ThemeManager.CurrentStartGantry = SurvivalStart; }
             else if (nSurvivalP > 0) { ThemeManager.CurrentStartGantry = SurvivalStartPoint; }
             return nClassic + nDigital + nBeta + nSurvival + nSurvivalP;
-        }
+        }*/
 
-        public void CountEndLines()
+        /*public void CountEndLines()
         {
             if (ClassicEnd && LevelEditorManager.Instance.CostManager.GetCount(ClassicEnd) > 0) { ThemeManager.CurrentFinishGantry = ClassicEnd; }
             if (DigitalEnd && LevelEditorManager.Instance.CostManager.GetCount(DigitalEnd) > 0) { ThemeManager.CurrentFinishGantry = DigitalEnd; }
             if (BetaEnd && LevelEditorManager.Instance.CostManager.GetCount(BetaEnd) > 0) { ThemeManager.CurrentFinishGantry = BetaEnd; }
             //Log.LogMessage("found ends: " + nClassic + " " + nDigital + " " + nBeta);
-        }
+        }*/
 
         /*public void ManageAllCurrentObjects()
         {
@@ -179,6 +188,7 @@ namespace FraggleExpansion
             if (Owner.name == "POD_Rule_FloorStart_Vanilla")
             {
                 BetaStart = Owner;
+                Owner.matchingCriteria = FraggleCriteria.Criteria.MinimumStartPoints;
             }
             else if (Owner.name == "POD_Rule_Floor_Start_Retro")
             {
@@ -197,6 +207,7 @@ namespace FraggleExpansion
                 SurvivalStart = Owner;
                 Owner.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().EditorOnlyRenderers = null; // this makes it visible
                 Owner.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().collidersToDisable = null; // this makes it touchable
+                Owner.matchingCriteria = FraggleCriteria.Criteria.MinimumStartPoints;
                 //Placeable.defaultVariant.Prefab.GetComponent<LevelEditorPlaceableObject>().ParameterTypes = LevelEditorParametersManager.LegacyParameterTypes.None;
             }
             else if (Owner.name == "POD_UI_Trigger_Volume") // Owner.name == "POD_Drawable_Killzone_Common" || Owner.name == "POD_Drawable_Killzone_Gauntlet_Common" - can't make em visible easily
@@ -206,6 +217,7 @@ namespace FraggleExpansion
             else if (Owner.name == "POD_Rule_FloorEnd_Vanilla")
             {
                 BetaEnd = Owner;
+                Owner.matchingCriteria = FraggleCriteria.Criteria.FinishLine;
             }
             else if (Owner.name == "POD_Rule_Floor_End_Retro")
             {
