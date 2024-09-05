@@ -355,34 +355,60 @@ namespace FraggleExpansion.Patches.Creative
     // OnLevelLoadSuccessEvent
     // LevelEditorPlaceableObject.SetActiveColliders(bool)
     // LevelEditorPlaceableObject.ColliderBounds
+    public class MainInit
+    {
+        static bool InitOnce = false;
+        [HarmonyPatch(typeof(MainMenuBackgroundViewModel), nameof(MainMenuBackgroundViewModel.SwitchBackground), new[] { typeof(TopBarMenuChangedEvent) }), HarmonyPostfix] // doesn't fire for the main menu but fires when you click any submenu later // only fires outside map editor when switching top bar tabs
+        public static void MenuLoad(MainMenuBackgroundViewModel __instance, TopBarMenuChangedEvent e)
+        {
+            Main.Instance.Setup_done = false; // for SuperLateLoad after a map has loaded
+            //Main.Instance.Log.LogMessage("MenuLoad name: " + __instance.name); // 3D Environment
+            if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false); }
+            if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
+            //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
+            //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
+            if (!InitOnce) // here comes a 2 sec lag, enjoy
+            {
+                Main.Instance.LateLoad();
+                InitOnce = true;
+                if (!Main.Instance.Preprocessed)
+                {
+                    Main.Instance.Preproccess_POD_prefabs();
+                }//  && (FraggleExpansionData.AddAllObjects || FraggleExpansionData.AddUnusedObjects)
+            }
+        }
+    }
     public class MainFeaturePatches
     {
-        // Transition
-        // MainMenu
-        // FallGuy_FraggleBackground_Vanilla
-        // FallGuy_Editor
-        [HarmonyPatch(typeof(SceneManager), nameof(SceneManager.Internal_SceneLoaded)), HarmonyPostfix]
-        public static void Internal_SceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            // do stuff
-            if (scene.name == "MainMenu")
+            // Transition
+            // MainMenu
+            // FallGuy_FraggleBackground_Vanilla
+            // FallGuy_Editor
+            /*[HarmonyPatch(typeof(SceneManager), nameof(SceneManager.Internal_SceneLoaded)), HarmonyPostfix]
+            public static void Internal_SceneLoaded(Scene scene, LoadSceneMode mode)
             {
-                if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
-                //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
-                //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
-                if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false);  }
-                if (!Main.Instance.Preprocessed) Main.Instance.Preproccess_POD_prefabs(); //  && (FraggleExpansionData.AddAllObjects || FraggleExpansionData.AddUnusedObjects)
-            }
-            else if (scene.name == "FallGuy_Editor")
-            {
-                //if (!Main.Instance.Preprocessed) Main.Instance.ManageAllCurrentObjects();
-                Main.Instance.Setup_done = false;
-                //Main.Instance.Preprocessed = false; // do we need to do it every map reload? - we don't
-            }
+                // do stuff
+                Main.Instance.Log.LogMessage("Loading scene: " + scene.name);
+                if (scene.name == "Transition")
+                {
+                    if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
+                    //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
+                    //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
+                    if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false); }
+                    if (!Main.Instance.Preprocessed)
+                    {
+                        Main.Instance.Preproccess_POD_prefabs();
+                    }//  && (FraggleExpansionData.AddAllObjects || FraggleExpansionData.AddUnusedObjects)
+                }
+                else if (scene.name == "FallGuy_Editor") // SuperLateLoad
+                {
+                    //if (!Main.Instance.Preprocessed) Main.Instance.ManageAllCurrentObjects();
+                    Main.Instance.Setup_done = false;
+                    //Main.Instance.Preprocessed = false; // do we need to do it every map reload? - we don't
+                }
+            }*/
 
-        }
-
-        [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.ApplyScaleToObject)), HarmonyPrefix]
+            [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.ApplyScaleToObject)), HarmonyPrefix]
         public static bool FixCheckpointZoneWithPainterScaling(LevelEditorDrawableData __instance, bool subObj = false)
         {
             // Basically there's issues if the semantic type is CheckpointFloor, but if it's not then the size of the Checkpoint Collider is not changed, so we do it before scaling the object here
@@ -408,16 +434,38 @@ namespace FraggleExpansion.Patches.Creative
         // public unsafe UpdateDraftParameters(string shareCode, string levelJSON, string levelName, string levelDescription, string levelTags, Dictionary<string, Il2CppSystem.Object> levelConfig)
 
         // the SODIUM :-)
-        /*[HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix] // or ConvertAndPerformLevelDataUpgradeIfRequired
-        public static void music_sel_set(ref string __result, Il2CppSystem.Object value, bool indented = false)
+        [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix] // or ConvertAndPerformLevelDataUpgradeIfRequired
+        public static void shrink_json(ref string __result, Il2CppSystem.Object value, bool indented = false)
         {
-            //Main.Instance.Log.LogMessage(__result);
-            if (FraggleExpansionData.LevelMusic.Length != 0)
+            if (FraggleExpansionData.ShrinkLevelJson)
+            {
+                //Main.Instance.Log.LogMessage("before json shrink: "+__result);
+                __result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
+                                   .Replace("\"Group Type\":\"None\",", ""); // useless stuff
+                __result = Regex.Replace(__result, "\"[^\"]+\":false,", "");
+            }
+            //__result = Regex.Replace(__result, "\"[^\"]+\":0([.]0)*,", ""); // breaks floors
+            //__result = Regex.Replace(__result, "\"(ColourPaletteID)\":\"[^\"]+\",", ""); // useless stuff... but disables changing color LOL
+            //Main.Instance.Log.LogMessage("after json shrink: " + __result);
+
+            /*__result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
+                               .Replace("\"PhysicsObjectEnabled\":false,", "")
+                               .Replace("\"PhysicsObjectIsDraggable\":false,", "")
+                               .Replace("\"PointsAwarded\":0,", "")
+                               .Replace("\"DestructibleObjectNumHits\":0,", "")
+                               .Replace("\"DestructibleObjectForce\":0,", "")
+                               .Replace("\"DestructibleObjectEnabled\":false,", "")
+                               .Replace("\"DestructibleObjectEnabled\":false,", "")
+                               .Replace("\"Group Type\":\"None\",", "")
+                               .Replace("\"Floor Pivot Pos\":0.0,", "")
+                               ;*/
+
+            /*if (FraggleExpansionData.LevelMusic.Length != 0)
             {
                 __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
-            }
+            }*/
             //Main.Instance.Log.LogMessage(__result);
-        }*/
+        }
 
         // LevelEditorManagerIO.SelectedMusic
         /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
