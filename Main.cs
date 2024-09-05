@@ -52,9 +52,12 @@ namespace FraggleExpansion
 
         public override void Load()
         {
-            Log.LogMessage("Creative Expansion Pack CE 2.4");
-
             Instance = this;
+            _Harmony.PatchAll(typeof(MainInit));
+        }
+        public void LateLoad()
+        {
+            //Log.LogMessage("Creative Expansion Pack CE 2.4");
 
             _ = new PropertiesReader();
             _ = new myXml();
@@ -349,7 +352,7 @@ namespace FraggleExpansion
                 if (Owner == null) { /*Log.LogMessage("asset " + AssetRegistryName + " has no owner data");*/ return; }
                 if (HasCarouselDataForObject(Owner)) { /*Log.LogMessage("object " + AssetRegistryName + " is already in the list " +Owner.name);*/ return; }
                 //Loadable.LoadBlocking(); // makes objects which usually don't get loaded load, but categories now carry over to standard objects - how to check if we need to call it? - haven't found a way.... // ok, we don't need this anymore after Preprocessing f()
-                if (Owner.name == "POD_FanPlatform_OFF_Vanilla" || Owner.name == "POD_FanPlatform_ON_Vanilla") { return; } // blacklist // these guys somehow make digital maps softlock
+                if (Owner.name == "POD_FanPlatform_OFF_Vanilla" || Owner.name == "POD_FanPlatform_ON_Vanilla" || Owner.name == "POD_Floor_Fillet") { return; } // blacklist // these guys somehow make digital maps softlock // and the fillet can't be placed
                 Owner.objectNameKey = Owner.name; // technical names for added objects
                 VariantTreeElement VariantElement = new VariantTreeElement(Owner.name, 1, ID);
                 //Owner.defaultVariant = Owner.objectVariants[DefaultVariantIndex];
@@ -361,6 +364,7 @@ namespace FraggleExpansion
                                     .Replace("POD_Inflatable_Vanilla_Wall_beta", "Inflatable")
                                     .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
                                     .Replace("POD_FloorStart_Survival_SpawnPoint_Vanilla", "Start")
+                                    .Replace("POD_UI_Trigger_Volume", "POD_Trigger_Zone")
                                     .Replace("_Retro", "")
                                     .Replace("_Vanilla", "")
                                     .Replace("POD_Floor_Vinyl_Matt_2_2_Double_Height", "POD_Floor_Soft")
@@ -404,6 +408,8 @@ namespace FraggleExpansion
                                     .Replace("_Feature", "")
                                     .Replace("POD_Wheel", "")
                                     .Replace("_Common", "")
+                                    .Replace("_Points", "")
+                                    .Replace("_Race", "")
                                     .Replace("_ON", "")
                                     .Replace("_OFF", "")
                                     .Replace("Multi", "")
