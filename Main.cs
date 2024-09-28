@@ -160,6 +160,15 @@ namespace FraggleExpansion
                             //Main.Instance.Log.LogMessage("destroyed LevelEditorScaleParameter for: " + Owner.name + " v: " + Variant.name);
                         }
                     }
+                    else
+                    {
+                        var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
+                        if (!prefab_comp2)
+                        {
+                            Variant.Prefab.AddComponent<LevelEditorScaleParameter>();
+                            Variant.Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = true; // for those with no params
+                        }
+                    }
 
                     if (CostHandler._firstFree) // not needed anymore actually
                     {
