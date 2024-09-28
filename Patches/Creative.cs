@@ -37,6 +37,9 @@ using System.ComponentModel;
 using BepInEx.Unity.IL2CPP.Utils;
 using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
 using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
+using Il2CppSystem.Linq;
+using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -443,6 +446,8 @@ namespace FraggleExpansion.Patches.Creative
                 __result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
                                    .Replace("\"Group Type\":\"None\",", ""); // useless stuff
                 __result = Regex.Replace(__result, "\"[^\"]+\":false,", "");
+                //__result = Regex.Replace(__result, "Theme ID\":\"[^\\\"]*", "Theme ID\":\"THEME_VANILLA");
+                //__result = Regex.Replace(__result, "SkyboxId\":\"[^\\\"]*", "SkyboxId\":\"Jungle_Skybox");
             }
             //__result = Regex.Replace(__result, "\"[^\"]+\":0([.]0)*,", ""); // breaks floors
             //__result = Regex.Replace(__result, "\"(ColourPaletteID)\":\"[^\"]+\",", ""); // useless stuff... but disables changing color LOL
@@ -623,11 +628,10 @@ namespace FraggleExpansion.Patches.Creative
                 __instance.transform.localScale = Vector3.one; // we can fix him
             }
             respawnTransform.localScale = DoFixScale(respawnTransform.localScale, respawnTransform.lossyScale);
-            //Main.Instance.Log.LogMessage("new local: " + respawnTransform.localScale);
+            //Main.Instance.Log.LogMessage("new local scale: " + respawnTransform.localScale + " for: " + respawnTransform.name);
         }
 
-        [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
-        public static void Scale_set(Transform __instance, Vector3 value)
+        public static void Visually_fix_spawnbasket_items(Transform __instance, Vector3 value)
         {
             if (__instance.name == "Placeable_Obstacle_SpawnBasket_Vanilla_MEDIUM(Clone)")
             {
@@ -645,16 +649,91 @@ namespace FraggleExpansion.Patches.Creative
                         //n.transform.SetParent(null, true);
                         //n.transform.localScale = Vector3.one;
                         //n.transform.SetParent(Parent, true); doesn't work?
-
                     }
                     else if (ShouldFixScale(n.transform.localScale, n.transform.lossyScale))
                     {
                         n.transform.localScale = DoFixScale(n.transform.localScale, n.transform.lossyScale);
                         //Main.Instance.Log.LogMessage("new local: " + n.transform.localScale);
                     }
+                    else if (value == Vector3.one)
+                    {
+                        n.transform.localScale = Vector3.one;
+                    }
                 }
             }
         }
+
+        public static void Properly_Scale_set_so_it_saves(Transform __instance, Vector3 value)
+        {
+            if (__instance.parent == null || __instance.parent.name == "MultiSelectRigidBodyOwner") // only root objects (placeables - probably), or children of multi-select
+            {
+                if (__instance.name == "MultiSelectRigidBodyOwner") return; // has no parent
+
+                var prefab_comp = __instance.GetComponent<LevelEditorScaleParameter>();
+                if (prefab_comp)
+                {
+                    prefab_comp.SetScale(__instance.localScale, true); // proper way of setting scale, "selected" must be set to "true" for it to save, but we'll have properties window popping up occasionally...
+                    Main.Instance.Log.LogMessage("set scale properly for: " + __instance.name);
+                }
+                else
+                {
+                    Main.Instance.Log.LogMessage("didnt find Scale component for: " + __instance.name);
+                }
+            }
+        }
+
+        public static Vector3 maxScale = new Vector3(20, 20, 20);
+        //public static Vector3 minScale = new Vector3(-1, -1, -1);
+        [HarmonyPatch(typeof(LevelEditorScaleParameterValues), nameof(LevelEditorScaleParameterValues.SetScale), new[] { typeof(Vector3), typeof(bool) }), HarmonyPostfix] // when using the std scale menu & also on map start
+        public static void LevelEditorScaleParameterValues_SetScale(LevelEditorScaleParameterValues __instance, Vector3 scale, bool isSelected) // when using std scale menu
+        {
+            if (!Main.Instance.Setup_done) return; // lets work only after our map is loaded
+            //Main.Instance.Log.LogMessage("Param SetScale: " + __instance._transform.name);
+            Visually_fix_spawnbasket_items(__instance._transform, scale);
+
+            if (__instance._maximumScale != maxScale) __instance._maximumScale = maxScale;
+            //if (__instance._minimumScale != minScale) __instance._minimumScale = minScale; // if yoo set it to 0 - you wont find your object ever again lol...
+        }
+
+        [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
+        public static void Transform_Scale_set(Transform __instance, Vector3 value)
+        {
+            Visually_fix_spawnbasket_items(__instance, value);
+            Properly_Scale_set_so_it_saves(__instance, value);
+        }
+
+        // Transform.lossyScale - actual scale, what will be set after disowning
+        // Transform.localScale - original scale (1 1 1), different from lossy when in multi-selection and MS is scaled
+
+        [HarmonyPatch(typeof(LevelEditorMultiSelectionHandler), nameof(LevelEditorMultiSelectionHandler.DisownMultiSelectRigidBodyTransforms)), HarmonyPostfix]
+        public static void DisownMultiSelectRigidBodyTransforms(LevelEditorMultiSelectionHandler __instance, Il2CppSystem.Collections.Generic.IEnumerable<LevelEditorPlaceableObject> objs)
+        {
+            //Main.Instance.Log.LogMessage("MS name: " + __instance._multiselectGlobalParent.name);
+            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one) return; // ok it wasnt changed
+            
+            foreach (var obj in objs.ToArray()) 
+            {
+                //Main.Instance.Log.LogMessage("Disown: lossy " + obj.transform.lossyScale + ", local: " + obj.transform.localScale); // they are the same here meaning they are already detached
+                Visually_fix_spawnbasket_items(obj.transform, obj.transform.localScale);
+                Properly_Scale_set_so_it_saves(obj.transform, obj.transform.localScale);
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelEditorMultiSelectionHandler), nameof(LevelEditorMultiSelectionHandler.DisownAllMultiSelectRigidBodyTransforms)), HarmonyPostfix]
+        public static void DisownAllMultiSelectRigidBodyTransforms(LevelEditorMultiSelectionHandler __instance)
+        {
+            //Main.Instance.Log.LogMessage("MS name: " + __instance._multiselectGlobalParent.name);
+            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one) return; // ok it wasnt changed
+
+            //Main.Instance.Log.LogMessage("MS owns: " + __instance.GetSelection.Count); // still owns all objects
+            foreach (var obj in __instance.GetSelection)
+            {
+                //Main.Instance.Log.LogMessage("Disown all: lossy " + obj.transform.lossyScale + ", local: " + obj.transform.localScale); // they are the same here meaning they are already detached
+                Visually_fix_spawnbasket_items(obj.transform, obj.transform.localScale);
+                Properly_Scale_set_so_it_saves(obj.transform, obj.transform.localScale);
+            }
+        }
+
 
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
