@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using ScriptableObjects;
@@ -121,9 +121,14 @@ namespace FraggleExpansion
                         FraggleExpansionData.AddAllObjects = ResultAsBoolean;
                         break;
 
-                    case "RemoveDefaultScalingFeature":
+                    /*case "RemoveDefaultScalingFeature":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.RemoveDefaultScalingFeature);
                         FraggleExpansionData.RemoveDefaultScalingFeature = ResultAsBoolean;
+                        break;
+                    */
+                    case "ShrinkLevelJson":
+                        ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.ShrinkLevelJson);
+                        FraggleExpansionData.ShrinkLevelJson = ResultAsBoolean;
                         break;
 
                         /*case "musiceventplaymode":
@@ -204,7 +209,14 @@ namespace FraggleExpansion
     public struct FraggleExpansionData
     {
         // True booleans
-        public static bool AddUnusedObjects = false, AddAllObjects = true, GhostBlocks = true, LastPostion = true, BypassBounds = true, UseMainSkinInExploreState = true, RemoveDefaultScalingFeature = true;
+        public static bool  AddUnusedObjects = false, 
+                            AddAllObjects = true, 
+                            GhostBlocks = true, 
+                            LastPostion = true, 
+                            BypassBounds = true, 
+                            UseMainSkinInExploreState = true, 
+                            RemoveDefaultScalingFeature = false,
+                            ShrinkLevelJson = false;
         //public static bool LetFirstTimePopUpHappen = true;
         //public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
         //public static string MusicEventPlayMode = "MUS_InGame_Long_Wall";
