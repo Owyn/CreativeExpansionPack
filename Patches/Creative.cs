@@ -444,8 +444,9 @@ namespace FraggleExpansion.Patches.Creative
             {
                 //Main.Instance.Log.LogMessage("before json shrink: "+__result);
                 __result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
+                                   //.Replace("\"CurrentScaleParam\":\\[([^\\]])*\\],", "") // redundant stuff MT made up
                                    .Replace("\"Group Type\":\"None\",", ""); // useless stuff
-                __result = Regex.Replace(__result, "\"[^\"]+\":false,", "");
+                __result = Regex.Replace(__result, "\"(?!Level|Test)([^\"])+\":false,", ""); // ok, MT broke this one
                 //__result = Regex.Replace(__result, "Theme ID\":\"[^\\\"]*", "Theme ID\":\"THEME_VANILLA");
                 //__result = Regex.Replace(__result, "SkyboxId\":\"[^\\\"]*", "SkyboxId\":\"Jungle_Skybox");
             }
@@ -673,7 +674,7 @@ namespace FraggleExpansion.Patches.Creative
                 if (prefab_comp)
                 {
                     prefab_comp.SetScale(__instance.localScale, true); // proper way of setting scale, "selected" must be set to "true" for it to save, but we'll have properties window popping up occasionally...
-                    Main.Instance.Log.LogMessage("set scale properly for: " + __instance.name);
+                    //Main.Instance.Log.LogMessage("set scale properly for: " + __instance.name);
                 }
                 else
                 {
@@ -734,6 +735,25 @@ namespace FraggleExpansion.Patches.Creative
             }
         }
 
+        [HarmonyPatch(typeof(LevelEditorScaleParameter), nameof(LevelEditorScaleParameter.Write)), HarmonyPrefix]
+        public static bool Write(LevelEditorScaleParameter __instance, UGCObjectDataSchema schema)
+        {
+            return false; // we don't want to write this reduntant scale stuff which resets the scale when added to objects which didn't have it previously
+        }
+
+        [HarmonyPatch(typeof(LevelEditorScaleParameter), nameof(LevelEditorScaleParameter.Read)), HarmonyPrefix]
+        public static bool Read(LevelEditorScaleParameter __instance, ref UGCObjectDataSchema schema) // so our in-game scale menu isn't always [1,1,1]
+        {
+            /*var newScaleParams = schema.LocalScale;
+            for (var i = 0; i < 3; i++)
+            {
+                newScaleParams[i] = (float)(Math.Round(newScaleParams[i] * 4f) / 4f); // round to 0.25
+                if (newScaleParams[i] > maxScale[i]) newScaleParams[i] = maxScale[i];
+                else if (newScaleParams[i] < 0.25f) newScaleParams[i] = 0.25f;
+            }*/ // this would actually change the value
+            schema.SetParameterByKey("CurrentScaleParam", schema.LocalScale.Cast<Il2CppSystem.Object>()); // it will be 0.25 if it's outside allowed range
+            return true;
+        }
 
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
