@@ -442,11 +442,24 @@ namespace FraggleExpansion.Patches.Creative
         {
             if (FraggleExpansionData.ShrinkLevelJson)
             {
-                //Main.Instance.Log.LogMessage("before json shrink: "+__result);
-                __result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
-                                   //.Replace("\"CurrentScaleParam\":\\[([^\\]])*\\],", "") // redundant stuff MT made up
-                                   .Replace("\"Group Type\":\"None\",", ""); // useless stuff
-                __result = Regex.Replace(__result, "\"(?!Level|Test)([^\"])+\":false,", ""); // ok, MT broke this one
+                //Main.Instance.Log.LogMessage("before json shrink: " + __result);
+                // simple replaces
+                __result = __result.Replace(@",""Group Type"":""None""", "") // useless stuff
+                                   .Replace(@",""Active"":true", "")
+                                   .Replace(@"(Clone)", "")
+                                   .Replace(@",""RespawnParam"":true", "")
+                                   .Replace(@",""PointsAwarded"":0", "")
+                                   .Replace(@",""CollisionEnabledParam"":true", "") // new stuff below, we can delete it cuz MT did some back-compat so old levels without it would still load with default values
+                                   .Replace(@",""VisibilityParam"":1", ""); // default is "Visible" anyway
+                // regex replaces:
+                __result = Regex.Replace(__result, @",(?<!""DestructibleObjectEnabled"":true,)""DestructibleObjectForce"":0,""DestructibleObjectNumHits"":0", ""); // Destructible param value when Destructible is disabled
+                __result = Regex.Replace(__result, @",(?<!""PhysicsObjectEnabled"":true,)""PhysicsObjectWeightIndex"":1", ""); // weight param value when physics are disabled
+                __result = Regex.Replace(__result, @",""ColourPaletteID"":""([^""])+""", ""); // who cares which was selected last time
+                __result = Regex.Replace(__result, @",""(?!Level|Test|CollisionEnabledParam)([^""])+"":false", ""); // del eveerything which is set to false except few exceptions
+
+
+                //.Replace(",\"CurrentScaleParam\":\\[([^\\]])*\\]", "") // redundant stuff MT made up - we already delete this even without json shrinking
+
                 //__result = Regex.Replace(__result, "Theme ID\":\"[^\\\"]*", "Theme ID\":\"THEME_VANILLA");
                 //__result = Regex.Replace(__result, "SkyboxId\":\"[^\\\"]*", "SkyboxId\":\"Jungle_Skybox");
             }
