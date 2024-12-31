@@ -1,4 +1,4 @@
-using FG.Common.LevelEditor.Serialization;
+﻿using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -40,6 +40,8 @@ using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstr
 using Il2CppSystem.Linq;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
+using FraggleExpansion.Patches.Reticle;
+using static RootMotion.FinalIK.AimPoser;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -428,6 +430,18 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
+        // level history (ability to load old map versions) - LevelAggregateDto has it, but it's kinda complicated :-(
+
+        // load: // ok, we have only URL here, nothing else
+        /*[HarmonyPatch(typeof(UGCNetworkRequests), nameof(UGCNetworkRequests.CreateDownloadStringRequest)), HarmonyPostfix]
+        public static void Load_level_json(URLParameter parameters)
+        {
+            Main.Instance.Log.LogMessage("DL level: URL" + parameters.URL);
+            //Main.Instance.Log.LogMessage("DL level: json" + parameters._levelJSON);
+            //Main.Instance.Log.LogMessage("DL level: json" + parameters._responseHandler.Method);
+            //ReticleUI.level_size = Tools.SizeSuffix(parameters._levelJSON._value.Length); //__result.Length.ToString();
+        }*/
+
         // publish:
         // FG.Common.UGCNetworking.UGCNetworkRequests::CreateUpdateLevelStateRequest(FG.Common.UGCNetworking.UpdateLevelStateParameters parameters)
         // void LevelEditorLevel::Publish(bool tryUploadThumbnail, FG.Common.UGCNetworking.ResponseHandler customHandler)
@@ -436,13 +450,16 @@ namespace FraggleExpansion.Patches.Creative
         // void LevelEditorLevel::UpdateDraft(FG.Common.UGCNetworking.ResponseHandler onCompleteCallBack)
         // public unsafe UpdateDraftParameters(string shareCode, string levelJSON, string levelName, string levelDescription, string levelTags, Dictionary<string, Il2CppSystem.Object> levelConfig)
 
+        //static float bar_initial_pos = -1;
         // the SODIUM :-)
+        // SerializeObject -> DeserializeLevelData
         [HarmonyPatch(typeof(UGCJsonSerializer), nameof(UGCJsonSerializer.SerializeObject)), HarmonyPostfix] // or ConvertAndPerformLevelDataUpgradeIfRequired
         public static void shrink_json(ref string __result, Il2CppSystem.Object value, bool indented = false)
         {
+            if (!__result.StartsWith("{\"Version\":\"V1\",\"Test Mode Completed\"")) return; // SerializeObject also fires for MultiSelect
             if (FraggleExpansionData.ShrinkLevelJson)
             {
-                //Main.Instance.Log.LogMessage("before json shrink: " + __result);
+                //Main.Instance.Log.LogMessage("before json shrink:\n " + __result);
                 // simple replaces
                 __result = __result.Replace(@",""Group Type"":""None""", "") // useless stuff
                                    .Replace(@",""Active"":true", "")
@@ -456,35 +473,49 @@ namespace FraggleExpansion.Patches.Creative
                 __result = Regex.Replace(__result, @",(?<!""PhysicsObjectEnabled"":true,)""PhysicsObjectWeightIndex"":1", ""); // weight param value when physics are disabled
                 __result = Regex.Replace(__result, @",""ColourPaletteID"":""([^""])+""", ""); // who cares which was selected last time
                 __result = Regex.Replace(__result, @",""(?!Level|Test|CollisionEnabledParam)([^""])+"":false", ""); // del eveerything which is set to false except few exceptions
-
+                //Main.Instance.Log.LogMessage("after json shrink:\n " + __result);
 
                 //.Replace(",\"CurrentScaleParam\":\\[([^\\]])*\\]", "") // redundant stuff MT made up - we already delete this even without json shrinking
 
                 //__result = Regex.Replace(__result, "Theme ID\":\"[^\\\"]*", "Theme ID\":\"THEME_VANILLA");
                 //__result = Regex.Replace(__result, "SkyboxId\":\"[^\\\"]*", "SkyboxId\":\"Jungle_Skybox");
             }
-            //__result = Regex.Replace(__result, "\"[^\"]+\":0([.]0)*,", ""); // breaks floors
-            //__result = Regex.Replace(__result, "\"(ColourPaletteID)\":\"[^\"]+\",", ""); // useless stuff... but disables changing color LOL
-            //Main.Instance.Log.LogMessage("after json shrink: " + __result);
-
-            /*__result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
-                               .Replace("\"PhysicsObjectEnabled\":false,", "")
-                               .Replace("\"PhysicsObjectIsDraggable\":false,", "")
-                               .Replace("\"PointsAwarded\":0,", "")
-                               .Replace("\"DestructibleObjectNumHits\":0,", "")
-                               .Replace("\"DestructibleObjectForce\":0,", "")
-                               .Replace("\"DestructibleObjectEnabled\":false,", "")
-                               .Replace("\"DestructibleObjectEnabled\":false,", "")
-                               .Replace("\"Group Type\":\"None\",", "")
-                               .Replace("\"Floor Pivot Pos\":0.0,", "")
-                               ;*/
-
-            /*if (FraggleExpansionData.LevelMusic.Length != 0)
+            ReticleUI.level_size = Tools.SizeSuffix(__result.Length); //__result.Length.ToString();
+            var bar = GameObject.FindObjectsOfType<LevelEditorResourceBarViewModel>(true);
+            foreach (var b in bar)
             {
-                __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
-            }*/
-            //Main.Instance.Log.LogMessage(__result);
-        }
+                b.RaiseAllPropertiesChanged();
+                /*var gobj = b.gameObject.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).gameObject.transform;
+                if (bar_initial_pos == -1) bar_initial_pos = gobj.position.x;
+                if (bar_initial_pos == gobj.position.x)
+                {
+                    gobj.position = new Vector3(gobj.position.x - 100, gobj.position.y, gobj.position.z);
+                }*/ // moving the text to the left - nah, let's not
+            }
+                //LevelEditorResourceBarViewModel.PropertyChangedInfo;
+                //LevelEditorManager.Instance.UI.GetResourceBarData().
+                //__result = Regex.Replace(__result, "\"[^\"]+\":0([.]0)*,", ""); // breaks floors
+                //__result = Regex.Replace(__result, "\"(ColourPaletteID)\":\"[^\"]+\",", ""); // useless stuff... but disables changing color LOL
+                //Main.Instance.Log.LogMessage("after json shrink: " + __result);
+
+                /*__result = __result.Replace("\"PhysicsObjectEnabled\":false,\"PhysicsObjectWeightIndex\":1,", "")
+                                   .Replace("\"PhysicsObjectEnabled\":false,", "")
+                                   .Replace("\"PhysicsObjectIsDraggable\":false,", "")
+                                   .Replace("\"PointsAwarded\":0,", "")
+                                   .Replace("\"DestructibleObjectNumHits\":0,", "")
+                                   .Replace("\"DestructibleObjectForce\":0,", "")
+                                   .Replace("\"DestructibleObjectEnabled\":false,", "")
+                                   .Replace("\"DestructibleObjectEnabled\":false,", "")
+                                   .Replace("\"Group Type\":\"None\",", "")
+                                   .Replace("\"Floor Pivot Pos\":0.0,", "")
+                                   ;*/
+
+                /*if (FraggleExpansionData.LevelMusic.Length != 0)
+                {
+                    __result = Regex.Replace(__result, "Music\":\"[^\\\"]*", "Music\":\"" + FraggleExpansionData.LevelMusic);
+                }*/
+                //Main.Instance.Log.LogMessage(__result);
+            }
 
         // LevelEditorManagerIO.SelectedMusic
         /*[HarmonyPatch(typeof(UGCLevelDataSchema), nameof(UGCLevelDataSchema.LevelMusic), MethodType.Getter), HarmonyPrefix] // field accessor ok
