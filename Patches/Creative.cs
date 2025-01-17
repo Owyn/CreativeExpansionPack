@@ -1,4 +1,4 @@
-﻿using FG.Common.LevelEditor.Serialization;
+using FG.Common.LevelEditor.Serialization;
 using FG.Common;
 using FGClient;
 using HarmonyLib;
@@ -459,21 +459,27 @@ namespace FraggleExpansion.Patches.Creative
             if (!__result.StartsWith("{\"Version\":\"V1\",\"Test Mode Completed\"")) return; // SerializeObject also fires for MultiSelect
             if (FraggleExpansionData.ShrinkLevelJson)
             {
-                //Main.Instance.Log.LogMessage("before json shrink:\n " + __result);
+                //Main.Instance.Log.LogMessage("\nbefore json shrink:\n " + __result);
                 // simple replaces
-                __result = __result.Replace(@",""Group Type"":""None""", "") // useless stuff
-                                   .Replace(@",""Active"":true", "")
-                                   .Replace(@"(Clone)", "")
-                                   .Replace(@",""RespawnParam"":true", "")
-                                   .Replace(@",""PointsAwarded"":0", "")
-                                   .Replace(@",""CollisionEnabledParam"":true", "") // new stuff below, we can delete it cuz MT did some back-compat so old levels without it would still load with default values
-                                   .Replace(@",""VisibilityParam"":1", ""); // default is "Visible" anyway
+                __result = __result.Replace("(Clone)", "") // useless stuff
+                                   .Replace(",\"Group Type\":\"None\"", "") // default values below, no need to specify em - we can remove anything which is not an array [] (else it crashes)
+                                   .Replace(",\"StartActive\":true", "")
+                                   .Replace(",\"RespawnParam\":true", "")
+                                   .Replace(",\"PointsAwarded\":1", "")
+                                   .Replace(",\"DelayParameter\":0.0", "")
+                                   .Replace(",\"EnableVFXParam\":true", "")
+                                   .Replace(",\"EnableAudioParam\":true", "")
+                                   .Replace(",\"CollisionEnabledParam\":true", "") // new stuff below, we can delete it cuz MT did some back-compat so old levels without it would still load with default values
+                                   .Replace(",\"VisibilityParam\":1", "") // default is "Visible" anyway
+                                   .Replace(",\"DisableGroundObjectParam\":true", ""); // rotating beam floor
                 // regex replaces:
-                __result = Regex.Replace(__result, @",(?<!""DestructibleObjectEnabled"":true,)""DestructibleObjectForce"":0,""DestructibleObjectNumHits"":0", ""); // Destructible param value when Destructible is disabled
-                __result = Regex.Replace(__result, @",(?<!""PhysicsObjectEnabled"":true,)""PhysicsObjectWeightIndex"":1", ""); // weight param value when physics are disabled
-                __result = Regex.Replace(__result, @",""ColourPaletteID"":""([^""])+""", ""); // who cares which was selected last time
-                __result = Regex.Replace(__result, @",""(?!Level|Test|CollisionEnabledParam)([^""])+"":false", ""); // del eveerything which is set to false except few exceptions
-                //Main.Instance.Log.LogMessage("after json shrink:\n " + __result);
+                //__result = Regex.Replace(__result, "({\"Name\":\"(?!Placeable_Rule_Rotation_Controller)([^\"])+.*?),\"Active\":true", "$1"); // remove 'Active" for anothing other that Rotators - tested, it's not the Rotators which needs the "active" tag...
+                __result = Regex.Replace(__result, ",\"Active\":true(?![^}]+?\"Triggers\":\\[{)", ""); // remove 'Active" for anything which is not linked (else it disconnects)
+                __result = Regex.Replace(__result, ",(?<!\"DestructibleObjectEnabled\":true,)\"DestructibleObjectForce\":0,\"DestructibleObjectNumHits\":0", ""); // Destructible param value when Destructible is disabled
+                __result = Regex.Replace(__result, ",(?<!\"PhysicsObjectEnabled\":true,)\"PhysicsObjectWeightIndex\":1", ""); // weight param value when physics are disabled
+                __result = Regex.Replace(__result, ",\"ColourPaletteID\":\"([^\"])+\"", ""); // who cares which was selected last time
+                __result = Regex.Replace(__result, ",\"(?!Level|Test|CollisionEnabledParam|EnableAudioParam|EnableVFXParam|RespawnParam|StartActive|DisableGroundObjectParam)([^\"])+\":false", ""); // del eveerything which is set to false except few exceptions
+                //Main.Instance.Log.LogMessage("\nafter json shrink:\n " + __result);
 
                 //.Replace(",\"CurrentScaleParam\":\\[([^\\]])*\\]", "") // redundant stuff MT made up - we already delete this even without json shrinking
 
