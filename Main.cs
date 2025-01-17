@@ -163,7 +163,7 @@ namespace FraggleExpansion
                     else
                     {
                         var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
-                        if (!prefab_comp2)
+                        if (!prefab_comp2 && !Owner.name.Contains("Inflatable")) // yes, we can scale walls but we can't exit that menu for some reason...
                         {
                             Variant.Prefab.AddComponent<LevelEditorScaleParameter>();
                             Variant.Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = true; // for those with no params
@@ -239,6 +239,13 @@ namespace FraggleExpansion
             {
                 ClassicEnd = Owner;
             }
+            /*else if (Owner.name == "POD_Feature_Bubble_Vanilla")
+            {
+                //LevelEditorBubbleParameters.StepBubblePointsAwarded = 1;
+                //LevelEditorBubbleParameters.MaxBubblePointsAwarded = 10;
+                //LevelEditorBubbleParameters.MinBubblePointsAwarded = -10;
+                //Owner.defaultVariant.Prefab.GetComponent<LevelEditorBubbleParameters>().StepBubblePointsAwarded = 0;
+            }*/
             /*else if (Owner.name == "POD_SeeSaw_Vanilla")
             {
                 Owner.category = LevelEditorPlaceableObject.Category.MovingSurfaces;
@@ -247,15 +254,15 @@ namespace FraggleExpansion
             {
                 Placeable.category = LevelEditorPlaceableObject.Category.Platforms;
             }*/
-                /*else if ((Placeable.name == "POD_Floating_Cannon_Revised_Vanilla" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
-                {
-                    Prefab.AddComponent<LevelEditorReceiver>();
-                    Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
-                }*/ // it makes maps not load
+            /*else if ((Placeable.name == "POD_Floating_Cannon_Revised_Vanilla" && ThemeManager.CurrentThemeData.ID != "THEME_RETRO") || (Placeable.name == "POD_Floating_Cannon_Retro" && ThemeManager.CurrentThemeData.ID == "THEME_RETRO"))
+            {
+                Prefab.AddComponent<LevelEditorReceiver>();
+                Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
+            }*/ // it makes maps not load
 
-                /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
-                if (Buoyancy)
-                    UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
+            /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
+            if (Buoyancy)
+                UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
         }
 
         public void Manage_GameObject(GameObject Prefab) // Prefab
