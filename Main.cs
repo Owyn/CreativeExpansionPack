@@ -92,16 +92,16 @@ namespace FraggleExpansion
             }
         }*/
 
-        /*public void SetupStartLines() // thx MT for implementing yet another CEP feature
+        public void SetupStartLines() // else it will softlock on publish test with a custom start-line
         {
             if (!ThemeManager.CurrentStartGantries.Contains(ClassicStart)) { ThemeManager.CurrentStartGantries.Add(ClassicStart); }
             if (!ThemeManager.CurrentStartGantries.Contains(DigitalStart)) { ThemeManager.CurrentStartGantries.Add(DigitalStart); }
             if (!ThemeManager.CurrentStartGantries.Contains(BetaStart)) { ThemeManager.CurrentStartGantries.Add(BetaStart); }
             if (!ThemeManager.CurrentStartGantries.Contains(SurvivalStart)) { ThemeManager.CurrentStartGantries.Add(SurvivalStart); }
             if (!ThemeManager.CurrentStartGantries.Contains(SurvivalStartPoint)) { ThemeManager.CurrentStartGantries.Add(SurvivalStartPoint); }
-        }*/
+        }
 
-        /*public int CountStartLines()
+        /*public int CountStartLines() // thx MT for implementing yet another CEP feature
         {
             int nClassic, nDigital, nBeta, nSurvival, nSurvivalP;
             if (ClassicStart) { nClassic = LevelEditorManager.Instance.CostManager.GetCount(ClassicStart); } else { nClassic = 0; }
