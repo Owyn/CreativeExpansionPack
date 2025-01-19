@@ -202,7 +202,7 @@ namespace FraggleExpansion.Patches.Creative
                 FraggleExpansionData.bWalls = LevelEditorWallControllerSettings.Instance.BetaWalls;
                 FraggleExpansionData.bWallPillars = LevelEditorWallControllerSettings.Instance._combinedBetaPillars.Cast<PlaceableVariant_Wall>();
                 Main.Instance.Setup_done = true;
-                //Main.Instance.SetupStartLines();
+                Main.Instance.SetupStartLines();
                 //Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
                 //Main.Instance.CountEndLines();
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
