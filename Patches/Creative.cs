@@ -205,6 +205,7 @@ namespace FraggleExpansion.Patches.Creative
                 Main.Instance.SetupStartLines();
                 //Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
                 //Main.Instance.CountEndLines();
+                BugFixes.CacheAllObjectPlacedPosAndRot();
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
                 Btns[5]._nameLocKey = "Lesser vertical & rotational step";
                 Btns[4]._nameLocKey = "Center Camera";
@@ -713,6 +714,25 @@ namespace FraggleExpansion.Patches.Creative
                 }
             }
         }
+        public static Vector3 RoundStep(Vector3 vector3, float step = 0.25f)
+        {
+            return new Vector3(
+                Mathf.Round(vector3.x / step) * step,
+                Mathf.Round(vector3.y / step) * step,
+                Mathf.Round(vector3.z / step) * step);
+        }
+        public static Vector3 RoundVec3(Vector3 vector3, int decimalPlaces = 4) // 0.1234
+        {
+            float multiplier = 1;
+            for (int i = 0; i < decimalPlaces; i++)
+            {
+                multiplier *= 10f;
+            }
+            return new Vector3(
+                Mathf.Round(vector3.x * multiplier) / multiplier,
+                Mathf.Round(vector3.y * multiplier) / multiplier,
+                Mathf.Round(vector3.z * multiplier) / multiplier);
+        }
 
         public static void Properly_Scale_set_so_it_saves(Transform __instance, Vector3 value)
         {
@@ -723,32 +743,38 @@ namespace FraggleExpansion.Patches.Creative
                 var prefab_comp = __instance.GetComponent<LevelEditorScaleParameter>();
                 if (prefab_comp)
                 {
-                    prefab_comp.SetScale(__instance.localScale, true); // proper way of setting scale, "selected" must be set to "true" for it to save, but we'll have properties window popping up occasionally...
-                    //Main.Instance.Log.LogMessage("set scale properly for: " + __instance.name);
+                    prefab_comp.SetScale(RoundVec3(__instance.localScale), true); // proper way of setting scale, "selected" must be set to "true" for it to save, but we'll have properties window popping up occasionally...
+                    //Main.Instance.Log.LogMessage("set scale properly for: " + __instance.name + "to: " + RoundStep(__instance.localScale));
                 }
-                else
+                /*else
                 {
                     Main.Instance.Log.LogMessage("didnt find Scale component for: " + __instance.name);
-                }
+                }*/
             }
         }
 
         public static Vector3 maxScale = new Vector3(20, 20, 20);
         //public static Vector3 minScale = new Vector3(-1, -1, -1);
-        [HarmonyPatch(typeof(LevelEditorScaleParameterValues), nameof(LevelEditorScaleParameterValues.SetScale), new[] { typeof(Vector3), typeof(bool) }), HarmonyPostfix] // when using the std scale menu & also on map start
-        public static void LevelEditorScaleParameterValues_SetScale(LevelEditorScaleParameterValues __instance, Vector3 scale, bool isSelected) // when using std scale menu
+        [HarmonyPatch(typeof(LevelEditorScaleParameterValues), nameof(LevelEditorScaleParameterValues.SetScale), new[] { typeof(Vector3), typeof(bool), typeof(bool) }), HarmonyPostfix] // when using the std scale menu & also on map start
+        public static void LevelEditorScaleParameterValues_SetScale(LevelEditorScaleParameterValues __instance, Vector3 scale, bool isSelected, bool updateResponders = true) // when using std scale menu
         {
             if (!Main.Instance.Setup_done) return; // lets work only after our map is loaded
-            //Main.Instance.Log.LogMessage("Param SetScale: " + __instance._transform.name);
+            //Main.Instance.Log.LogMessage("Param SetScale: " + __instance._transform.name + " to: " + scale.ToString());
             Visually_fix_spawnbasket_items(__instance._transform, scale);
 
             if (__instance._maximumScale != maxScale) __instance._maximumScale = maxScale;
+            /*Vector3 biggerMaxScale = maxScale;
+            if (scale.x - __instance._maximumScale.x > 0.25f) biggerMaxScale.x = scale.x;
+            if (scale.y - __instance._maximumScale.y > 0.25f) biggerMaxScale.y = scale.y;
+            if (scale.z - __instance._maximumScale.z > 0.25f) biggerMaxScale.z = scale.z;
+            if(biggerMaxScale != maxScale) __instance._maximumScale = biggerMaxScale;*/
             //if (__instance._minimumScale != minScale) __instance._minimumScale = minScale; // if yoo set it to 0 - you wont find your object ever again lol...
         }
 
         [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
         public static void Transform_Scale_set(Transform __instance, Vector3 value)
         {
+            //Main.Instance.Log.LogMessage("Transform_Scale_set: " + __instance.localScale);
             Visually_fix_spawnbasket_items(__instance, value);
             Properly_Scale_set_so_it_saves(__instance, value);
         }
@@ -829,12 +855,24 @@ namespace FraggleExpansion.Patches.Creative
             return true; // run the original f
         }
 
+        public static void CacheAllObjectPlacedPosAndRot()
+        {
+            var flies = GameObject.FindObjectsOfType<LevelEditorGenericBuoyancy>();
+            foreach (var fly in flies)
+            {
+                fly.CacheObjectPlacedPosAndRot();
+            }
+        }
+
        [HarmonyPatch(typeof(LevelEditorActiveObjectBase), nameof(LevelEditorActiveObjectBase.CacheObjectPlacedPosAndRot)), HarmonyPostfix]
-        public static void CacheObjectPlacedPosAndRot(LevelEditorActiveObjectBase __instance)
+        public static void CacheObjectPlacedPosAndRot(LevelEditorActiveObjectBase __instance) // this fires when you playtest or publish test, but still it is somehow not cached now? hmmm...
         {
             var Buoyancy = __instance.GetComponent<LevelEditorGenericBuoyancy>();
             if (Buoyancy)
+            {
                 Buoyancy._placedPositionRotationCached = true; // no more floating away // MT you forgot this shiz!
+                //Main.Instance.Log.LogMessage("CacheObjectPlacedPosAndRot for: " + __instance.name);
+            }
         }
         // edit - it works for entering and leaving explore state but the map auto-saving when publishing still uses live position, not the cached one!!
 
@@ -844,7 +882,7 @@ namespace FraggleExpansion.Patches.Creative
             var flies = GameObject.FindObjectsOfType<LevelEditorGenericBuoyancy>();
             foreach (var fly in flies)
             {
-                //Main.Instance.Log.LogMessage("changing pos from: " + fly._placedPosition.ToString() + "to: " + fly.CachedGameObject.transform.position.ToString());
+                //Main.Instance.Log.LogMessage("changing pos to: " + fly._placedPosition.ToString() + "from: " + fly.CachedGameObject.transform.position.ToString());
                 fly.ResetMoveAndRotate();
                 fly.ResetBuoyancy();
             }
