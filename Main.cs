@@ -150,6 +150,14 @@ namespace FraggleExpansion
                             CostHandler.CMSData.Stock = -1; // this disables the icon                         
                         }
                     }
+                    if (CostHandler.IsHiddenFromCarousel && FraggleExpansionData.AddAllObjects) // hidden items
+                    {
+                        if (CostHandler.CMSData != null)
+                        {
+                            CostHandler.CMSData.HideFromCarousel = false;                        
+                        }
+                        Log.LogMessage("Unhide item: " + Owner.name + " cat: " + Owner.category);
+                    }
 
                     if (FraggleExpansionData.RemoveDefaultScalingFeature)
                     {
@@ -283,11 +291,11 @@ namespace FraggleExpansion
                 }
                 else if (POD_Name == "POD_UI_Trigger_Volume")
                 {
-                    var prefab_comp = Prefab.GetComponent<LevelEditorTransmitter>();
+                    /*var prefab_comp = Prefab.GetComponent<LevelEditorTransmitter>();
                     if (prefab_comp)
                     {
                         UnityEngine.Object.Destroy(prefab_comp);
-                    }
+                    }*/
                     var prefab_comp2 = Prefab.GetComponent<LevelEditorTriggerableParameter>();
                     if (prefab_comp2)
                     {
@@ -305,8 +313,8 @@ namespace FraggleExpansion
                     Drawable._canBePainterDrawn = true;
                     Drawable.FloorType = LevelEditorDrawableData.DrawableSemantic.FloorObject;
                     Drawable._restrictedDrawingAxis = LevelEditorDrawableData.DrawRestrictedAxis.Up;
-                    UnityEngine.Object.Destroy(Prefab.GetComponent<LevelEditorFloorScaleParameter>());
-                    Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = false;
+                    //UnityEngine.Object.Destroy(Prefab.GetComponent<LevelEditorFloorScaleParameter>()); // why ?
+                    //Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = false;
                     return;
                 }
                 Drawable._painterMaxSize = new Vector3(100000, 100000, 100000);
@@ -381,6 +389,8 @@ namespace FraggleExpansion
                                     .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
                                     .Replace("POD_FloorStart_Survival_SpawnPoint_Vanilla", "Start")
                                     .Replace("POD_UI_Trigger_Volume", "POD_Trigger_Zone")
+                                    //.Replace("GoopRipple", "Ripple")
+                                    .Replace("POD_Special_Goo_Slide", "Trench")
                                     .Replace("_Retro", "")
                                     .Replace("_Vanilla", "")
                                     .Replace("POD_Floor_Vinyl_Matt_2_2_Double_Height", "POD_Floor_Soft")
@@ -406,7 +416,6 @@ namespace FraggleExpansion
                                     .Replace("_Normal", "")
                                     .Replace("_Short", "")
                                     .Replace("_Vinyl", "")
-                                    .Replace("POD_Special_Goo_Slide", "Goop")
                                     .Replace("SpinDoor", "Spin_Door")
                                     .Replace("_Moderate", "")
                                     .Replace("_Steep", "")
@@ -449,11 +458,11 @@ namespace FraggleExpansion
                             CurrentObjectTreeList.Insert(i, new VariantTreeElement("Folder for " + Owner.name, 0, itemID));
                             CarouselItem.depth = 1;
                             i++; // our folder made it bigger
-                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a new list " + (i-1) + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name);
+                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a new list " + (i-1) + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name + " category: " + Owner.category);
                         }
                         else
                         {
-                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a list " + i + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name);
+                            //Log.LogMessage("adding " + Owner.name + " ( " + simpleName + " ) to a list " + i + " w: " + CarouselItem.Variant.Owner.name + " aka: " + CarouselItem.name + " category: " + Owner.category);
                             //if (CarouselItem.parent.Cast<VariantTreeElement>().SelectedIndex != 0) CarouselItem.parent.Cast<VariantTreeElement>().SelectedIndex = 0; // Fans folder
                         }
                         CurrentObjectTreeList.Insert(i + 1, VariantElement); // place after it
