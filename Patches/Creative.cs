@@ -207,15 +207,17 @@ namespace FraggleExpansion.Patches.Creative
                 //Main.Instance.CountEndLines();
                 BugFixes.CacheAllObjectPlacedPosAndRot();
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
-                Btns[5]._nameLocKey = "Lesser vertical & rotational step";
-                Btns[4]._nameLocKey = "Center Camera";
+                Btns[6]._nameLocKey = "Lesser vertical & rotational step";
+                Btns[5]._nameLocKey = "Center Camera";
                 Btns[2]._nameLocKey = "Ghost Blocks";
+                Btns[4]._nameLocKey = "Links";
                 Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
                 Btns[3]._descriptionLocKey = "Shift + Select = select all\nCtrl + Select = select all objects of the same type\nChrl + Shift + Select = select all objects of the same scale\n(console-key) ` + Select = select all in proximity\n` or 1 or 2 or 3 or 4 + DEselect = reset \\ + \\ - the proximity";
                 Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
-                Btns[4].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
+                Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
                 Btns[2].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True"); // Clipping
-                Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/Precision").Value == "True"); // Precision
+                Btns[6].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/Precision").Value == "True"); // Precision
+                Btns[4].SetMultiOptionValue(int.Parse(myXml.Instance.Data.XPathSelectElement("/States/Links")?.Value)); // Links
             }
         }
 
@@ -244,6 +246,22 @@ namespace FraggleExpansion.Patches.Creative
                     break;
                 default:
                     Main.Instance.Log.LogMessage("LevelEditor_RadialMenuButtonDefinition -> SetToggleValue()  unknown button toggled: " + __instance.NameKey);
+                    return;
+            }
+        }
+
+        [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetMultiOptionValue)), HarmonyPostfix]
+        public static void SetMultiOptionValue(LevelEditor_RadialMenuButtonDefinition __instance, int value = 0)
+        {
+            //Main.Instance.Log.LogMessage(__instance.NameKey);
+            switch (__instance.NameKey)
+            {
+                case "Links":
+                    myXml.Instance.Data.XPathSelectElement("/States/Links").Value = value.ToString();
+                    myXml.Instance.Save();
+                    break;
+                default:
+                    Main.Instance.Log.LogMessage("LevelEditor_RadialMenuButtonDefinition -> SetMultiOptionValue()  unknown button: " + __instance.NameKey);
                     return;
             }
         }
