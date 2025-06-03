@@ -10,15 +10,6 @@
 
 > There's my Fall Guys **Map Making disc0rd**: https://dsc.gg/CEP  
 
-**How is CEP CE different from just CEP?**
-
-> - You can build digital objects (& beta objects) in original maps (and vica versa) with its custom buildable object list - you can also sort it however you want and add\remove items into it
-> - Ghost Block support (turned off by default so you don't accidentially make em - turn it on in the `\BepinEx\plugins\CreativeExpansionPack\ExpansionData.txt` config file)
-> - Unity Explorer is bundled together with it to **scale** objects and position them precisely (F3 hotkey to toggle its UI)
-> - Budget bar feature to count how many objects there are in your map (more than 3k (?) objects could lead to your map failing to load occasionally when playing)
-> - Select All & Select All by Type & Select All Scale & Select All in Proximity features
-> - You can set max players to 40 even with a single small start-line
-
 **What features does Creative Expansion Pack include?**
 > - removing all mapmaking limits basically: 
 > - - budget limit, 
@@ -26,11 +17,18 @@
 > - - object rotation limit, 
 > - - overlapping limit
 > - - max multiselect limit of 20
+> - - limit on which objects have the in-game scaling menu available
 > - - limit on the size of checkpoints
 > - - limit of themed objects being tied to the map theme (digital \ original)
 > - - building outside the map bounds area limit
 > - - setting max players to 40 with just a single small start-line
-> - and some additional **features** such as:
+
+and some additional **new features** such as:
+> - adding unused and hidden by the devs buildable objects to the build-list so you can place em onto your map for everyone to play
+> - Unity Explorer is bundled together with it to **scale** objects and position them precisely (**F3** hotkey to toggle its UI)
+> - Budget bar feature to count how many objects there are in your map and how much file-size it takes (big filesize (more than 1.5MB) can lead to your map failing to load when playing)
+> - Radial buttons in the settings menu are now saved between game launches (center on objects, snap to edges etc)
+> - Making spawn-points in checkpoint-zones visible again
 > - - select all - hold left `shift` when multi-(de)selecting)
 >   -  select all by type - hold left `ctrl` when multi-(de)selecting)
 >   -  select all by scale - hold both `shift` & `ctrl` when multi-(de)selecting)
