@@ -319,6 +319,7 @@ namespace FraggleExpansion.Patches.Creative
     public class BypassesPatches
     {
         [HarmonyTranspiler]
+        [HarmonyPatch(typeof(LevelEditorCheckpointTriggerZone), nameof(LevelEditorCheckpointTriggerZone.ShouldVisualsBeShownInCheckpoint), MethodType.Getter)]
         [HarmonyPatch(typeof(LevelEditorMultiSelectionHandler), nameof(LevelEditorMultiSelectionHandler.CanSelectMore), MethodType.Getter)]
         [HarmonyPatch(typeof(LevelEditorStateReticleBase), nameof(LevelEditorStateReticleBase.CanPlaceSelectedObject))]
         [HarmonyPatch(typeof(PlaceableObjectCostHandler), nameof(PlaceableObjectCostHandler.HasStock))] // CanPlaceMoreOfThisObj
