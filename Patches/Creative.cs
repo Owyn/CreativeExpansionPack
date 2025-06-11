@@ -60,15 +60,16 @@ namespace FraggleExpansion.Patches.Creative
 
         // - CustomisationSelections 'customisations':  Customisations: ColourName=Colour_055 PatternName=Pattern_S08_27 CostumeTopName=BurgerBear_Top_01 CostumeBottomName=Fox_Bottom_01 CostumeFullName=NoneFullOption FaceplateName=faceplate_s10_03 VictoryPoseName=Victory_001 NicknameName=nickname_ss2_05 NameplateName=nameplate_ss02_event_trickerortreater EmoteNames=Emote_JumpRope/Emote_WaveA/Emote_Orcarina/Emote_Swiftlet
         [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
-        public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, out FallGuysCharacterController characterController, out ClientPlayerUpdateManager playerUpdateManager)
+        public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, ref FallGuysCharacterController characterController, ref ClientPlayerUpdateManager playerUpdateManager)
         {
             if (FraggleExpansionData.UseMainSkinInExploreState)
             {
                 var CustomisationSelection = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
                 CustomisationManager.Instance.ApplyCustomisationsToFallGuy(playerGameObject, CustomisationSelection, -1);
+
+                characterController = null;
+                playerUpdateManager = null;
             }
-            characterController = null;
-            playerUpdateManager = null;
             return true;
         }
 
@@ -85,9 +86,9 @@ namespace FraggleExpansion.Patches.Creative
                 MiscData.CurrentPositionDisplay.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
                 MiscData.CurrentPositionDisplay.GetComponent<BoxCollider>().isTrigger = true;
                 MiscData.CurrentPositionDisplay.transform.position = UnityEngine.Object.FindObjectOfType<FallGuysCharacterController>().transform.position;
-            }
-            UnityEngine.Object.FindObjectOfType<LevelEditorNavigationScreenViewModel>().SetPlayVisible(true);
 
+                UnityEngine.Object.FindObjectOfType<LevelEditorNavigationScreenViewModel>().SetPlayVisible(true);
+            }
             return true;
         }
 
@@ -99,10 +100,10 @@ namespace FraggleExpansion.Patches.Creative
             if (FraggleExpansionData.LastPostion)
             {
                 if (MiscData.CurrentPositionDisplay != null) UnityEngine.Object.Destroy(MiscData.CurrentPositionDisplay);
+
+
+                UnityEngine.Object.FindObjectOfType<LevelEditorNavigationScreenViewModel>().SetPlayVisible(false);
             }
-
-            UnityEngine.Object.FindObjectOfType<LevelEditorNavigationScreenViewModel>().SetPlayVisible(false);
-
             return true;
         }
 
@@ -205,7 +206,7 @@ namespace FraggleExpansion.Patches.Creative
                 Main.Instance.SetupStartLines();
                 //Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
                 //Main.Instance.CountEndLines();
-                BugFixes.CacheAllObjectPlacedPosAndRot();
+                BugFixes.CacheAllObjectPlacedPosAndRot(); // ok, this doesn't help I think
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
                 Btns[6]._nameLocKey = "Lesser vertical & rotational step";
                 Btns[5]._nameLocKey = "Center Camera";
@@ -244,8 +245,8 @@ namespace FraggleExpansion.Patches.Creative
                     myXml.Instance.Data.XPathSelectElement("/States/Precision").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
-                default:
-                    Main.Instance.Log.LogMessage("LevelEditor_RadialMenuButtonDefinition -> SetToggleValue()  unknown button toggled: " + __instance.NameKey);
+                default: // wle_multiselect, undo
+                    //Main.Instance.Log.LogMessage("LevelEditor_RadialMenuButtonDefinition -> SetToggleValue()  unknown button toggled: " + __instance.NameKey);
                     return;
             }
         }
@@ -650,12 +651,22 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
-        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPrefix]
         public static bool AddScalingFeature(LevelEditorPlaceableObject __instance)
         {
             return !FraggleExpansionData.RemoveDefaultScalingFeature;
-        }
+        }*/
 
+        [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPostfix]
+        public static void AddScalingFeaturePost(LevelEditorPlaceableObject __instance)
+        {
+            if (!__instance._levelEditorScaleParameter)
+            {
+                __instance._levelEditorScaleParameter = __instance.GetComponent<LevelEditorScaleParameter>();
+                //Main.Instance.Log.LogMessage("AddScalingFeature Post: adding link for " + __instance.name);
+            }
+
+        }
     }
 
     public class BugFixes
@@ -753,6 +764,25 @@ namespace FraggleExpansion.Patches.Creative
                 Mathf.Round(vector3.z * multiplier) / multiplier);
         }
 
+        public static void Properly_Rotation_set_so_it_saves(Transform __instance, Vector3 value)
+        {
+            if (__instance.parent == null || __instance.parent.name == "MultiSelectRigidBodyOwner") // only root objects (placeables - probably), or children of multi-select
+            {
+                if (__instance.name == "MultiSelectRigidBodyOwner") return; // has no parent
+
+                var prefab_comp = __instance.GetComponent<LevelEditorPlaceableObject>();
+                if (prefab_comp)
+                {
+                    prefab_comp.RotationData.CurrentRotation = RoundVec3(value); // proper way of setting rotation, "selected" must be set to "true" for it to save, but we'll have properties window popping up occasionally...
+                    //Main.Instance.Log.LogMessage("set rotation properly for: " + __instance.name + "to: " + RoundVec3(value));
+                }
+                /*else
+                {
+                    Main.Instance.Log.LogMessage("didnt find rotation component for: " + __instance.name);
+                }*/
+            }
+        }
+
         public static void Properly_Scale_set_so_it_saves(Transform __instance, Vector3 value)
         {
             if (__instance.parent == null || __instance.parent.name == "MultiSelectRigidBodyOwner") // only root objects (placeables - probably), or children of multi-select
@@ -790,6 +820,13 @@ namespace FraggleExpansion.Patches.Creative
             //if (__instance._minimumScale != minScale) __instance._minimumScale = minScale; // if yoo set it to 0 - you wont find your object ever again lol...
         }
 
+        [HarmonyPatch(typeof(Transform), nameof(Transform.localEulerAngles), MethodType.Setter), HarmonyPostfix]
+        public static void Transform_Rotation_set(Transform __instance, Vector3 value)
+        {
+            //Main.Instance.Log.LogMessage("Transform_Rotation_set: " + value);
+            Properly_Rotation_set_so_it_saves(__instance, value);
+        }
+
         [HarmonyPatch(typeof(Transform), nameof(Transform.localScale), MethodType.Setter), HarmonyPostfix]
         public static void Transform_Scale_set(Transform __instance, Vector3 value)
         {
@@ -805,13 +842,14 @@ namespace FraggleExpansion.Patches.Creative
         public static void DisownMultiSelectRigidBodyTransforms(LevelEditorMultiSelectionHandler __instance, Il2CppSystem.Collections.Generic.IEnumerable<LevelEditorPlaceableObject> objs)
         {
             //Main.Instance.Log.LogMessage("MS name: " + __instance._multiselectGlobalParent.name);
-            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one) return; // ok it wasnt changed
+            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one && __instance._multiselectGlobalParent.transform.localEulerAngles == Vector3.zero) return; // ok it wasnt changed
             
             foreach (var obj in objs.ToArray()) 
             {
                 //Main.Instance.Log.LogMessage("Disown: lossy " + obj.transform.lossyScale + ", local: " + obj.transform.localScale); // they are the same here meaning they are already detached
                 Visually_fix_spawnbasket_items(obj.transform, obj.transform.localScale);
                 Properly_Scale_set_so_it_saves(obj.transform, obj.transform.localScale);
+                Properly_Rotation_set_so_it_saves(obj.transform, obj.transform.localEulerAngles);
             }
         }
 
@@ -819,7 +857,7 @@ namespace FraggleExpansion.Patches.Creative
         public static void DisownAllMultiSelectRigidBodyTransforms(LevelEditorMultiSelectionHandler __instance)
         {
             //Main.Instance.Log.LogMessage("MS name: " + __instance._multiselectGlobalParent.name);
-            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one) return; // ok it wasnt changed
+            if (__instance._multiselectGlobalParent != null && __instance._multiselectGlobalParent.transform.localScale == Vector3.one && __instance._multiselectGlobalParent.transform.localEulerAngles == Vector3.zero) return; // ok it wasnt changed
 
             //Main.Instance.Log.LogMessage("MS owns: " + __instance.GetSelection.Count); // still owns all objects
             foreach (var obj in __instance.GetSelection)
@@ -827,33 +865,49 @@ namespace FraggleExpansion.Patches.Creative
                 //Main.Instance.Log.LogMessage("Disown all: lossy " + obj.transform.lossyScale + ", local: " + obj.transform.localScale); // they are the same here meaning they are already detached
                 Visually_fix_spawnbasket_items(obj.transform, obj.transform.localScale);
                 Properly_Scale_set_so_it_saves(obj.transform, obj.transform.localScale);
+                Properly_Rotation_set_so_it_saves(obj.transform, obj.transform.localEulerAngles);
             }
         }
 
-        [HarmonyPatch(typeof(LevelEditorScaleParameter), nameof(LevelEditorScaleParameter.Write)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorScaleParameter), nameof(LevelEditorScaleParameter.Write)), HarmonyPrefix]
         public static bool Write(LevelEditorScaleParameter __instance, UGCObjectDataSchema schema)
         {
+            var HasPhysics = __instance.GetComponent<LevelEditorPhysicsObjectParameter>();
+            if (HasPhysics) // currently from all objects with physics - only plain edge had no scale component
+                return true; // else it will reset the scale for ALL the objects with physics ON
+
             return false; // we don't want to write this reduntant scale stuff which resets the scale when added to objects which didn't have it previously
-        }
+        }*/
+        // ok... it doesn't reset anymore, it seems? // if not - let's try setting schema.LocalScale here to the same value then
 
         [HarmonyPatch(typeof(LevelEditorScaleParameter), nameof(LevelEditorScaleParameter.Read)), HarmonyPrefix]
         public static bool Read(LevelEditorScaleParameter __instance, ref UGCObjectDataSchema schema) // so our in-game scale menu isn't always [1,1,1]
         {
-            /*var newScaleParams = schema.LocalScale;
+            /*var HasPhysics = __instance.GetComponent<LevelEditorPhysicsObjectParameter>();
+            if (HasPhysics)
+                return true;*/
+
+            //Main.Instance.Log.LogMessage(__instance.name + " - ReadScaleParam: [" + schema.LocalScale[0] + "," + schema.LocalScale[1] + "," + schema.LocalScale[2] + "]");
+
+            bool notDefault = false; // so old maps without scale UI param feature won't all reset everything
+            var newScaleParams = schema.LocalScale; // we aren't reading from the new "ScaleParam", but from the good old "Local scale" instead, now MT mad it so it saves both to the same value finally 
             for (var i = 0; i < 3; i++)
             {
-                newScaleParams[i] = (float)(Math.Round(newScaleParams[i] * 4f) / 4f); // round to 0.25
+                newScaleParams[i] = Mathf.Round(newScaleParams[i] * 10000.0f) / 10000.0f; // 4 digits after the point - UE only lets you set up to that much, the rest is garbage
+                if(newScaleParams[i] != 1.0f) notDefault = true;
+                /*newScaleParams[i] = (float)(Math.Round(newScaleParams[i] * 4f) / 4f); // round to 0.25 - would change the value for real too much - bad idea
                 if (newScaleParams[i] > maxScale[i]) newScaleParams[i] = maxScale[i];
-                else if (newScaleParams[i] < 0.25f) newScaleParams[i] = 0.25f;
-            }*/ // this would actually change the value
-            schema.SetParameterByKey("CurrentScaleParam", schema.LocalScale.Cast<Il2CppSystem.Object>()); // it will be 0.25 if it's outside allowed range
+                else if (newScaleParams[i] < 0.25f) newScaleParams[i] = 0.25f;*/
+            } // this would actually change the value
+            if(notDefault) schema.SetParameterByKey("CurrentScaleParam", newScaleParams.Cast<Il2CppSystem.Object>()); // it will be shown as 0.25 if it's outside allowed range
             return true;
         }
 
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
         {
-            if(unseparatedSize.y > 22.0F) // spooky moment detected
+            // thes two bugs out and don't ghost: Placeable_Rule_Trigger_Zone_Race_Survival(Clone), Placeable_Rule_Trigger_Zone_Points(Clone)
+            if (unseparatedSize.y > 21.0F) // spooky moment detected
             {
                 //Main.Instance.Log.LogMessage(__instance.name);
                 //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + unseparatedSize.y);
@@ -863,7 +917,8 @@ namespace FraggleExpansion.Patches.Creative
                 }
                 else // stop him, he's breaking the laws of physics!
                 {
-                    __instance.ApplyDepthToFloor(21, true);
+                    __instance.ApplyDepthToFloor(20, true);
+                    //Main.Instance.Log.LogMessage(__instance.name);
                     return false;
                 }
             }
