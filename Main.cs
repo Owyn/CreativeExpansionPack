@@ -171,7 +171,7 @@ namespace FraggleExpansion
                     else
                     {
                         var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
-                        if (!prefab_comp2 && !Owner.name.Contains("Inflatable")) // yes, we can scale walls but we can't exit that menu for some reason...
+                        if (!prefab_comp2 && !Owner.name.Contains("Inflatable")) // yes, we can scale walls but we can't exit that menu for some reason... // we can also scale fillets but that won't save
                         {
                             Variant.Prefab.AddComponent<LevelEditorScaleParameter>();
                             Variant.Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = true; // for those with no params
@@ -267,10 +267,6 @@ namespace FraggleExpansion
                 Prefab.AddComponent<LevelEditorReceiver>();
                 Prefab.GetComponentInChildren<CannonActiveStateEventResponders>()._eventResponderNameKey = "wle_event_responder_toggle_on_off";
             }*/ // it makes maps not load
-
-            /*var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
-            if (Buoyancy)
-                UnityEngine.Object.Destroy(Buoyancy);*/ // no more floating up and down
         }
 
         public void Manage_GameObject(GameObject Prefab) // Prefab
@@ -279,6 +275,11 @@ namespace FraggleExpansion
             if (prefab_comp_ff)
             {
                 UnityEngine.Object.Destroy(prefab_comp_ff); // still stays on the first pre-placed startline
+            }
+            if (FraggleExpansionData.RemoveBuoyancy)
+            {
+                var Buoyancy = Prefab.GetComponent<LevelEditorGenericBuoyancy>();
+                if (Buoyancy) UnityEngine.Object.Destroy(Buoyancy); // no more floating up and down
             }
             var Drawable = Prefab.GetComponent<LevelEditorDrawableData>();
             if (Drawable)
@@ -307,7 +308,7 @@ namespace FraggleExpansion
                         UnityEngine.Object.Destroy(prefab_comp3);
                     }
                 }
-                else if (Prefab.GetComponent<LevelEditorCheckpointFloorData>() && POD_Name != "POD_Drawable_CheckpointTriggerZone_Common")
+                else if (Prefab.GetComponent<LevelEditorCheckpointFloorData>() && POD_Name != "POD_Drawable_CheckpointTriggerZone_Common" && POD_Name != "POD_FloorStart_SpawnPoint_Pack_Vanilla")
                 {
                     Drawable._painterMaxSize = new Vector3(10000, 10000, 10000);
                     Drawable._canBePainterDrawn = true;
