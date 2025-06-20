@@ -1,6 +1,13 @@
-using FG.Common.LevelEditor.Serialization;
+using BepInEx.Unity.IL2CPP.Utils;
 using FG.Common;
+using FG.Common.CMS;
+using FG.Common.LevelEditor.Serialization;
+using FG.Common.Loadables;
+using FG.Common.UGCNetworking;
 using FGClient;
+using FMODUnity;
+using FraggleExpansion;
+using FraggleExpansion.Patches.Reticle;
 using HarmonyLib;
 using Il2CppInterop.Common.Attributes;
 using Il2CppInterop.Runtime;
@@ -10,38 +17,32 @@ using Il2CppInterop.Runtime.Runtime;
 using Il2CppSystem;
 using Il2CppSystem.Collections;
 using Il2CppSystem.Collections.Generic;
+using Il2CppSystem.Linq;
+using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
 using Il2CppSystem.Text;
-using UnityEngine;
-using Wushu.Framework.ExtensionMethods;
-using FMODUnity;
-using UnityEngine.SceneManagement;
-using FG.Common.CMS;
-using ScriptableObjects;
-using FG.Common.Loadables;
-using TreeView;
+using Il2CppSystem.Threading;
 using LevelEditor;
 using Levels.Obstacles;
-using static LevelEditor.LevelEditorWallResizer;
+using ScriptableObjects;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using static RootMotion.FinalIK.RagdollUtility;
-using FG.Common.UGCNetworking;
-using System.Text.RegularExpressions;
-using Il2CppSystem.Threading;
-using UnityEngine.Playables;
-using FraggleExpansion;
-using System.Xml.XPath;
-using System.Reflection.Emit;
 using System.ComponentModel;
-using BepInEx.Unity.IL2CPP.Utils;
-using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
-using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
-using Il2CppSystem.Linq;
+using System.Linq;
+using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
-using FraggleExpansion.Patches.Reticle;
+using System.Text.RegularExpressions;
+using System.Xml.XPath;
+using TreeView;
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
+using Wushu.Framework.ExtensionMethods;
+using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
+using static LevelEditor.LevelEditorWallResizer;
+using static LevelEditorRespawnerController;
 using static RootMotion.FinalIK.AimPoser;
+using static RootMotion.FinalIK.RagdollUtility;
 
 namespace FraggleExpansion.Patches.Creative
 {
@@ -657,6 +658,7 @@ namespace FraggleExpansion.Patches.Creative
             return !FraggleExpansionData.RemoveDefaultScalingFeature;
         }*/
 
+        // fix for the scale resetting on playtest for objects with physics which previously didn't have scaling feature (plain edge)
         [HarmonyPatch(typeof(LevelEditorPlaceableObject), nameof(LevelEditorPlaceableObject.AddScalingFeature)), HarmonyPostfix]
         public static void AddScalingFeaturePost(LevelEditorPlaceableObject __instance)
         {
@@ -903,30 +905,34 @@ namespace FraggleExpansion.Patches.Creative
             return true;
         }
 
+        // LevelEditorDrawableData::OnDrawableUIInteracted(int id) // when the drawing starts
         [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
-        {
-            // thes two bugs out and don't ghost: Placeable_Rule_Trigger_Zone_Race_Survival(Clone), Placeable_Rule_Trigger_Zone_Points(Clone)
-            if (unseparatedSize.y > 21.0F) // spooky moment detected
+        { // the ghost-block on the fly making function (else they are made only on the map load)
+            // these two bug out and don't ghost: Placeable_Rule_Trigger_Zone_Race_Survival(Clone), Placeable_Rule_Trigger_Zone_Points(Clone)
+            if (unseparatedSize.y >= (float)__instance.DrawableDepthMaxIncrements + __instance._cachedBoxColliderStartSize.y) // spooky moment detected
             {
-                //Main.Instance.Log.LogMessage(__instance.name);
-                //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + unseparatedSize.y);
-                if (FraggleExpansionData.GhostBlocks || !Main.Instance.Setup_done) // only for newly placed objects, not ones loaded with the map
-                { 
-                    unseparatedSize.y = 2.0F; 
-                }
-                else // stop him, he's breaking the laws of physics!
-                {
-                    __instance.ApplyDepthToFloor(20, true);
-                    //Main.Instance.Log.LogMessage(__instance.name);
-                    return false;
-                }
+                //Main.Instance.Log.LogMessage("SetBoxColliderSize made SPOOKY " + __instance.name + " y: " + unseparatedSize.y);
+                unseparatedSize.y = 2.0F; 
             }
-            /*if (FraggleExpansionData.snapSeparatorSize != 0.025F) // I don't think this does anything useful
-            {
-                snapSeparation = FraggleExpansionData.snapSeparatorSize;
-            }*/
             return true; // run the original f
+        }
+
+        [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.IsDepthValid)), HarmonyPostfix]
+        public static void IsDepthValid(LevelEditorDrawableData __instance, ref bool __result, int depthID)
+        {
+            if (depthID < __instance.CurrentDepthId)
+            {
+                __result = true; // always allow decreasing
+            }
+            else if (depthID > __instance.DrawableDepthMaxIncrements && (FraggleExpansionData.GhostBlocks || !Main.Instance.Setup_done)) // don't kill the ghost-blocks on map-load
+            {
+                //var unseparatedSize = __instance._colliderSizeUnseparated;
+                //unseparatedSize.y = 2.0f;
+                //__instance.SetBoxColliderSize(unseparatedSize, __instance.SnapSeparation); // the hook above will do the job
+                //Main.Instance.Log.LogMessage("Ghost block made: " + __instance.name + " d: " + depthID + " r: " + __result);
+                __result = true;
+            }
         }
 
         public static void CacheAllObjectPlacedPosAndRot()
