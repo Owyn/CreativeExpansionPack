@@ -46,9 +46,8 @@ using static RootMotion.FinalIK.RagdollUtility;
 
 namespace FraggleExpansion.Patches.Creative
 {
-
-    public class FeaturesPatches
-    {
+    //public class FeaturesPatchesSkin
+    //{
         /*[HarmonyPatch(typeof(FallguyCustomisationHandler), nameof(FallguyCustomisationHandler.UpdateCostumeOption)), HarmonyPrefix]
         public static bool UpdateCostumeOption(FallguyCustomisationHandler __instance, CostumeOption selectedCostumeOption, bool isTeamCostume)
         {
@@ -60,7 +59,7 @@ namespace FraggleExpansion.Patches.Creative
         }*/
 
         // - CustomisationSelections 'customisations':  Customisations: ColourName=Colour_055 PatternName=Pattern_S08_27 CostumeTopName=BurgerBear_Top_01 CostumeBottomName=Fox_Bottom_01 CostumeFullName=NoneFullOption FaceplateName=faceplate_s10_03 VictoryPoseName=Victory_001 NicknameName=nickname_ss2_05 NameplateName=nameplate_ss02_event_trickerortreater EmoteNames=Emote_JumpRope/Emote_WaveA/Emote_Orcarina/Emote_Swiftlet
-        [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.InitialiseLocalCharacter)), HarmonyPrefix]
         public static bool MainSkinInFraggle(LevelEditorManager __instance, GameObject playerGameObject, ref FallGuysCharacterController characterController, ref ClientPlayerUpdateManager playerUpdateManager)
         {
             if (FraggleExpansionData.UseMainSkinInExploreState)
@@ -72,8 +71,11 @@ namespace FraggleExpansion.Patches.Creative
                 playerUpdateManager = null;
             }
             return true;
-        }
+        }*/
+    //}
 
+    public class FeaturesPatches
+    {
         [HarmonyPatch(typeof(LevelEditorStateExplore), nameof(LevelEditorStateExplore.DisableState)), HarmonyPrefix]
         public static bool LastPositionDisplayOnReticle(ILevelEditorState nextState)
         {
@@ -200,6 +202,13 @@ namespace FraggleExpansion.Patches.Creative
                 if (FraggleExpansionData.BypassBounds)
                 {
                     LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
+                }
+                if (FraggleExpansionData.UseMainSkinInExploreState)
+                {
+                    var PlayerProfile_Costume = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
+                    LevelEditorManager.Instance._colourOption = PlayerProfile_Costume.ColourOption;
+                    LevelEditorManager.Instance._costumeTop   = PlayerProfile_Costume.CostumeTopOption;
+                    LevelEditorManager.Instance._costumeBottom= PlayerProfile_Costume.CostumeBottomOption;
                 }
                 FraggleExpansionData.bWalls = LevelEditorWallControllerSettings.Instance.BetaWalls;
                 FraggleExpansionData.bWallPillars = LevelEditorWallControllerSettings.Instance._combinedBetaPillars.Cast<PlaceableVariant_Wall>();
