@@ -168,10 +168,10 @@ namespace FraggleExpansion
                             //Main.Instance.Log.LogMessage("destroyed LevelEditorScaleParameter for: " + Owner.name + " v: " + Variant.name);
                         }
                     }
-                    else
+                    else // not really needed, cuz the game adds it itself if that setting bolean is true
                     {
                         var prefab_comp2 = Variant.Prefab.GetComponent<LevelEditorScaleParameter>();
-                        if (!prefab_comp2 && !Owner.name.Contains("Inflatable")) // yes, we can scale walls but we can't exit that menu for some reason... // we can also scale fillets but that won't save
+                        if (!prefab_comp2 && !Owner.name.Contains("Inflatable") && !Owner.name.Contains("Fillet")) // Inflatable // yes, we can scale walls but we can't exit that menu for some reason... // we can also scale fillets but that won't save
                         {
                             Variant.Prefab.AddComponent<LevelEditorScaleParameter>();
                             Variant.Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = true; // for those with no params
@@ -187,8 +187,16 @@ namespace FraggleExpansion
                         }
                     }
 
-                    if (CostHandler.CMSData != null)
+                    if (CostHandler.CMSData != null && CostHandler.CMSData.Settings != null)
                     {
+                        if (!Owner.name.Contains("Inflatable") && !Owner.name.Contains("Fillet"))
+                        {
+                            CostHandler.CMSData.Settings.IsScalingEnabled = true;
+                        }
+                        CostHandler.CMSData.Settings.IsScalingUniform = false;
+                        CostHandler.CMSData.Settings.MaximumScale = 20.0f; // doesn't work?? // where does it even take its limit from...?
+                        if (CostHandler._genericCostsCMSData != null && CostHandler._genericCostsCMSData.Settings != null) CostHandler._genericCostsCMSData.Settings.MaximumScale = 20.0f; // not this either
+                        //CostHandler.CMSData.Settings.ScaleIgnoredAxis = []; // not needed
                         CostHandler.CMSData.Settings.IsOverlappingEnabled = true; // remove stupid icon over items
                     }
                 }
@@ -318,8 +326,12 @@ namespace FraggleExpansion
                     //Prefab.GetComponent<LevelEditorPlaceableObject>().hasParameterComponents = false;
                     return;
                 }
+                /*else // this allows to create plain edges with ghosting sides, also making barriers and checkpoints taller on date but not in reality
+                {
+                    Drawable._restrictedDrawingAxis = LevelEditorDrawableData.DrawRestrictedAxis.None;
+                }*/
                 Drawable._painterMaxSize = new Vector3(100000, 100000, 100000);
-                Drawable.DrawableDepthMaxIncrements = 100000; // GhostBlocks
+                //Drawable.DrawableDepthMaxIncrements = 100000; // GhostBlocks - let's do it another way now, not like this
             }
 
             /*var prefab_comp_ws = Prefab.GetComponent<LevelEditorDrawablePremadeWallSurface>();
