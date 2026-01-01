@@ -158,32 +158,36 @@ namespace FraggleExpansion.Patches.Creative
         {
             switch (__instance.ObjectDataOwner.name)
             {*/
-                /*case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
-                case "POD_Rule_Floor_Start_Retro": // digital
-                case "POD_Rule_FloorStart_Vanilla": // beta
-                case "POD_Rule_Floor_Start_Survival": // survival
-                case "POD_FloorStart_Survival_SpawnPoint_Vanilla": // survival point
-                    if (Main.Instance.CountStartLines() <= 1) // last one
-                    {
-                        __result = false;
-                        return false;
-                    }
-                    break;*/
-                /*case "POD_Rule_Floor_End_Revised_Vanilla": // classic
-                case "POD_Rule_Floor_End_Retro": // digital
-                case "POD_Rule_FloorEnd_Vanilla": // beta
-                    Main.Instance.CountEndLines();
-                    break;
+        /*case "POD_Rule_Floor_Start_Revised_Vanilla": // classic
+        case "POD_Rule_Floor_Start_Retro": // digital
+        case "POD_Rule_FloorStart_Vanilla": // beta
+        case "POD_Rule_Floor_Start_Survival": // survival
+        case "POD_FloorStart_Survival_SpawnPoint_Vanilla": // survival point
+            if (Main.Instance.CountStartLines() <= 1) // last one
+            {
+                __result = false;
+                return false;
             }
-            __result = __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
-            return false;
-        }*/
+            break;*/
+        /*case "POD_Rule_Floor_End_Revised_Vanilla": // classic
+        case "POD_Rule_Floor_End_Retro": // digital
+        case "POD_Rule_FloorEnd_Vanilla": // beta
+            Main.Instance.CountEndLines();
+            break;
+    }
+    __result = __instance.IsActionValid(LevelEditorPlaceableObject.Action.Delete);
+    return false;
+}*/
 
         /*[HarmonyPatch(typeof(LevelLoader), nameof(LevelLoader.ValidateUGCSchema)), HarmonyPostfix]
         public static void ValidateUGCSchema() // after post load objects
         {
             Main.Instance.SetUp(); // if we do it later than this - standard prefabs gonna get used for existing obj
         }*/
+
+        static CustomisationSelections PlayerProfile_Costume;
+        static CustomisationSelections BuilderProfile_Costume = new CustomisationSelections { };
+        static LevelEditorManager LevelEditorManagerInstance;
 
         [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.GetStartAndEndPlatforms)), HarmonyPostfix]
         public static void GetStartAndEndPlatforms() // after ReloadSkybox()
@@ -203,13 +207,21 @@ namespace FraggleExpansion.Patches.Creative
                 {
                     LevelEditorManager.Instance.MapPlacementBounds = new Bounds(LevelEditorManager.Instance.MapPlacementBounds.center, new Vector3(100000, 100000, 100000));
                 }
-                if (FraggleExpansionData.UseMainSkinInExploreState)
+                /*if (FraggleExpansionData.UseMainSkinInExploreState)
                 {
                     var PlayerProfile_Costume = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
                     LevelEditorManager.Instance._colourOption = PlayerProfile_Costume.ColourOption;
                     LevelEditorManager.Instance._costumeTop   = PlayerProfile_Costume.CostumeTopOption;
                     LevelEditorManager.Instance._costumeBottom= PlayerProfile_Costume.CostumeBottomOption;
-                }
+                    LevelEditorManager.Instance._costumeSkinPattern = PlayerProfile_Costume.PatternOption;
+                }*/
+                PlayerProfile_Costume = GlobalGameStateClient.Instance.PlayerProfile.CustomisationSelections;
+                BuilderProfile_Costume.ColourOption = LevelEditorManager.Instance._colourOption;
+                BuilderProfile_Costume.CostumeTopOption = LevelEditorManager.Instance._costumeTop;
+                BuilderProfile_Costume.CostumeBottomOption = LevelEditorManager.Instance._costumeBottom;
+                BuilderProfile_Costume.PatternOption = LevelEditorManager.Instance._costumeSkinPattern;
+                LevelEditorManagerInstance = LevelEditorManager.Instance;
+
                 FraggleExpansionData.bWalls = LevelEditorWallControllerSettings.Instance.BetaWalls;
                 FraggleExpansionData.bWallPillars = LevelEditorWallControllerSettings.Instance._combinedBetaPillars.Cast<PlaceableVariant_Wall>();
                 Main.Instance.Setup_done = true;
@@ -220,9 +232,11 @@ namespace FraggleExpansion.Patches.Creative
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
                 Btns[6]._nameLocKey = "Lesser vertical & rotational step";
                 Btns[5]._nameLocKey = "Center Camera";
-                Btns[2]._nameLocKey = "Ghost Blocks";
+                //Btns[2]._nameLocKey = "Ghost Blocks";
+                Btns[2]._nameLocKey = "Personal Skin";
                 Btns[4]._nameLocKey = "Links";
-                Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
+                //Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
+                Btns[2]._descriptionLocKey = "When playtesting - use your own personal skin";
                 Btns[3]._descriptionLocKey = "Shift + Select = select all\nCtrl + Select = select all objects of the same type\nChrl + Shift + Select = select all objects of the same scale\n(console-key) ` + Select = select all in proximity\n` or 1 or 2 or 3 or 4 + DEselect = reset \\ + \\ - the proximity";
                 Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
                 Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
@@ -232,16 +246,36 @@ namespace FraggleExpansion.Patches.Creative
             }
         }
 
+        public static void SetPersonalSkin(bool isOn)
+        {
+            if(isOn)
+            {
+                LevelEditorManagerInstance._colourOption = PlayerProfile_Costume.ColourOption;
+                LevelEditorManagerInstance._costumeTop = PlayerProfile_Costume.CostumeTopOption;
+                LevelEditorManagerInstance._costumeBottom = PlayerProfile_Costume.CostumeBottomOption;
+                LevelEditorManagerInstance._costumeSkinPattern = PlayerProfile_Costume.PatternOption;
+            }
+            else
+            {
+                LevelEditorManagerInstance._colourOption = BuilderProfile_Costume.ColourOption;
+                LevelEditorManagerInstance._costumeTop = BuilderProfile_Costume.CostumeTopOption;
+                LevelEditorManagerInstance._costumeBottom = BuilderProfile_Costume.CostumeBottomOption;
+                LevelEditorManagerInstance._costumeSkinPattern = BuilderProfile_Costume.PatternOption;
+            }
+            //Main.Instance.Log.LogMessage("SetPersonalSkin(): " + isOn);
+        }
+
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetToggleValue)), HarmonyPostfix]
         public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool isOn)
         {
             //Main.Instance.Log.LogMessage(__instance.NameKey);
             switch(__instance.NameKey)
             {
-                case "Ghost Blocks":
+                case "Personal Skin":
                     FraggleExpansionData.GhostBlocks = isOn;
                     myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = isOn.ToString();
                     myXml.Instance.Save();
+                    SetPersonalSkin(isOn);
                     break;
                 case "Center Camera":
                     myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = isOn.ToString();
@@ -915,7 +949,7 @@ namespace FraggleExpansion.Patches.Creative
         }
 
         // LevelEditorDrawableData::OnDrawableUIInteracted(int id) // when the drawing starts
-        [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
+        /*[HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.SetBoxColliderSize)), HarmonyPrefix]
         public static bool SetBoxColliderSize(LevelEditorDrawableData __instance, ref Vector3 unseparatedSize, ref float snapSeparation)
         { // the ghost-block on the fly making function (else they are made only on the map load)
             // these two bug out and don't ghost: Placeable_Rule_Trigger_Zone_Race_Survival(Clone), Placeable_Rule_Trigger_Zone_Points(Clone)
@@ -925,14 +959,14 @@ namespace FraggleExpansion.Patches.Creative
                 unseparatedSize.y = 2.0F; 
             }
             return true; // run the original f
-        }
+        }*/
 
-        [HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.IsDepthValid)), HarmonyPostfix]
+        /*[HarmonyPatch(typeof(LevelEditorDrawableData), nameof(LevelEditorDrawableData.IsDepthValid)), HarmonyPostfix]
         public static void IsDepthValid(LevelEditorDrawableData __instance, ref bool __result, int depthID)
         {
-            if (depthID < __instance.CurrentDepthId)
+            if (depthID >= 0 && depthID < __instance.CurrentDepthId)
             {
-                __result = true; // always allow decreasing
+                __result = true; // always allow decreasing // ok, not always - no negative ghostblocks pls
             }
             else if (depthID > __instance.DrawableDepthMaxIncrements && (FraggleExpansionData.GhostBlocks || !Main.Instance.Setup_done)) // don't kill the ghost-blocks on map-load
             {
@@ -942,7 +976,8 @@ namespace FraggleExpansion.Patches.Creative
                 //Main.Instance.Log.LogMessage("Ghost block made: " + __instance.name + " d: " + depthID + " r: " + __result);
                 __result = true;
             }
-        }
+            //Main.Instance.Log.LogMessage("IsDepthValid: " + __instance.name + " d: " + depthID + " current_d: " + __instance.CurrentDepthId + " result: " + __result);
+        }*/
 
         public static void CacheAllObjectPlacedPosAndRot()
         {
