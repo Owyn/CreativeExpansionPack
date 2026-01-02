@@ -46,9 +46,10 @@ namespace FraggleExpansion
     [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "47.0")]
     public class Main : BepInEx.Unity.IL2CPP.BasePlugin
     {
-        public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
+        public Harmony _Harmony = new("com.simp.fraggleexpansion");
         public static Main Instance;
         PlaceableObjectData BetaStart, DigitalStart, ClassicStart, SurvivalStart, SurvivalStartPoint, BetaEnd, DigitalEnd, ClassicEnd;
+        public static string ModDirectory => System.IO.Path.Combine(Paths.PluginPath, "CreativeExpansionPack"); //we can use bepinex shortcut to get into plugins folder
         //public SlimeGamemodesManager _SlimeGamemodeManager;
 
         public override void Load()
@@ -63,7 +64,7 @@ namespace FraggleExpansion
             //Log.LogMessage("Creative Expansion Pack CE 2.4");
 
             _ = new PropertiesReader();
-            _ = new myXml();
+            _ = new MyXml();
             //_SlimeGamemodeManager = new SlimeGamemodesManager();
 
             // Requirement to Intialize Creative Expansion Pack

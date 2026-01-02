@@ -4,6 +4,7 @@ using System.IO;
 using ScriptableObjects;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using BepInEx.Logging;
 
 namespace FraggleExpansion
 {
@@ -15,9 +16,9 @@ namespace FraggleExpansion
         public void InitializeData()
         {
             Instance = this;
-            List<string> CleanContent = new List<string>();
-            string FilePath =
-            Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\ExpansionData.txt");
+            List<string> CleanContent = [];
+            //string FilePath = Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\ExpansionData.txt");
+            string FilePath = Path.Combine(Main.ModDirectory, "ExpansionData.txt");
             if (!File.Exists(FilePath)) { /*Application.Quit();*/ return; } // no need to quit bruh, we've got default values
             string[] AllLinesInFile = File.ReadAllLines(FilePath);
 
@@ -194,12 +195,13 @@ namespace FraggleExpansion
 
     }
 
-    public class myXml
+    public class MyXml
     {
-        public static myXml Instance;
+        public static MyXml Instance;
         public XDocument Data = XDocument.Load(FilePath);
-        public myXml() => Init();
-        static string FilePath = Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\InGameRadialButtonsStates.xml");
+        public MyXml() => Init();
+        //static string FilePath = Path.Combine(BepInEx.Paths.GameRootPath + "\\BepInEx\\plugins\\CreativeExpansionPack\\InGameRadialButtonsStates.xml");
+        static readonly string FilePath = Path.Combine(Main.ModDirectory, "InGameRadialButtonsStates.xml");
         public void Init()
         {
             Instance = this;
