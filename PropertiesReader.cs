@@ -60,6 +60,11 @@ namespace FraggleExpansion
                         FraggleExpansionData.BypassBounds = ResultAsBoolean;
                         break;
 
+                    case "RemoveBuoyancy":
+                        ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.RemoveBuoyancy);
+                        FraggleExpansionData.RemoveBuoyancy = ResultAsBoolean;
+                        break;
+
                     /*case "betawalls":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.BetaWalls);
                         FraggleExpansionData.BetaWalls = ResultAsBoolean;
@@ -70,10 +75,10 @@ namespace FraggleExpansion
                         FraggleExpansionData.DisplayLevel = ResultAsBoolean;
                         break;*/
 
-                    case "CustomBuilderSkin":
+                    /*case "CustomBuilderSkin":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.UseMainSkinInExploreState);
                         FraggleExpansionData.UseMainSkinInExploreState = ResultAsBoolean;
-                        break;
+                        break;*/
 
                     case "LastPosition":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.LastPostion);
@@ -211,11 +216,12 @@ namespace FraggleExpansion
         // True booleans
         public static bool  AddUnusedObjects = false, 
                             AddAllObjects = true, 
-                            GhostBlocks = true, 
+                            GhostBlocks = false, 
                             LastPostion = true, 
                             BypassBounds = true, 
-                            UseMainSkinInExploreState = true, 
+                            //UseMainSkinInExploreState = true, 
                             RemoveDefaultScalingFeature = false,
+                            RemoveBuoyancy = true,
                             ShrinkLevelJson = false;
         //public static bool LetFirstTimePopUpHappen = true;
         //public static string MusicBankPlayMode = "BNK_Music_Long_Wall";
