@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using UnityEngine;
 using Il2CppInterop.Common.Attributes;
 using Il2CppInterop.Runtime;
@@ -29,6 +29,24 @@ namespace FraggleExpansion
 
     internal static class Tools
     {
+        static readonly string[] SizeSuffixes =
+                  { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+        public static string SizeSuffix(int value, int decimalPlaces = 2, int decimalPlacesAfter = 2)
+        {
+            if (value == 0) { return "0"; }
+            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
+
+            int i = 0;
+            double dValue = (double)value;
+            while (Math.Round(dValue, decimalPlaces) >= 1000)
+            {
+                dValue /= 1024;
+                i++;
+            }
+            if (i < decimalPlacesAfter) decimalPlaces = 0;
+            return string.Format("{0:n" + decimalPlaces + "} {1}", dValue, SizeSuffixes[i]);
+        }
         // recursive
         /*public static GameObject FindChild(this GameObject Parent, string Name)
         {
