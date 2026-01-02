@@ -102,6 +102,7 @@ namespace FraggleExpansion
 
             var locStrings = CMSLoader.Instance._localisedStrings;
             if (locStrings == null || locStrings._localisedStrings == null) return msg;
+            if (locStrings.ContainsString(key)) return key;
 
             if (locStrings._localisedStrings.TryAdd(key, msg))
                 return key;

@@ -24,6 +24,7 @@ using Il2CppSystem.Threading;
 using LevelEditor;
 using Levels.Obstacles;
 using ScriptableObjects;
+using SRF;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,6 +39,7 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
 using Wushu.Framework.ExtensionMethods;
+using static Events.EventSystem;
 using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 using static LevelEditor.LevelEditorWallResizer;
 using static LevelEditorRespawnerController;
@@ -186,7 +188,7 @@ namespace FraggleExpansion.Patches.Creative
         }*/
 
         static CustomisationSelections PlayerProfile_Costume;
-        static CustomisationSelections BuilderProfile_Costume = new CustomisationSelections { };
+        static CustomisationSelections BuilderProfile_Costume = new();
         static LevelEditorManager LevelEditorManagerInstance;
 
         [HarmonyPatch(typeof(LevelEditorManager), nameof(LevelEditorManager.GetStartAndEndPlatforms)), HarmonyPostfix]
@@ -260,7 +262,7 @@ namespace FraggleExpansion.Patches.Creative
 
         public static void SetPersonalSkin(bool isOn)
         {
-            if(isOn)
+            if (isOn)
             {
                 LevelEditorManagerInstance._colourOption = PlayerProfile_Costume.ColourOption;
                 LevelEditorManagerInstance._costumeTop = PlayerProfile_Costume.CostumeTopOption;
@@ -274,20 +276,37 @@ namespace FraggleExpansion.Patches.Creative
                 LevelEditorManagerInstance._costumeBottom = BuilderProfile_Costume.CostumeBottomOption;
                 LevelEditorManagerInstance._costumeSkinPattern = BuilderProfile_Costume.PatternOption;
             }
+
             //Main.Instance.Log.LogMessage("SetPersonalSkin(): " + isOn);
+        }
+
+        [HarmonyPatch(typeof(LevelEditorStatePlay), nameof(LevelEditorStatePlay.InitializeLocalCharacter)), HarmonyPrefix]
+        public static bool InitializeLocalCharacter(LevelEditorStatePlay __instance)
+        {
+            SetPersonalSkin(MyXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True");
+
+            var handler = __instance._playerGameObject?.GetComponentInChildren<FallguyCustomisationHandler>();
+            if (handler == null) return true;
+
+            //not really best way of doing this but it works
+            handler.UpdateCostumeOption(LevelEditorManagerInstance._costumeTop, false);
+            handler.UpdateCostumeOption(LevelEditorManagerInstance._costumeBottom, false);
+            handler.UpdatePatternTexture(LevelEditorManagerInstance._costumeSkinPattern);
+            handler.UpdateColourOption(LevelEditorManagerInstance._colourOption);
+            handler.CheckAndUseOptimisedShadowShader(false);
+            return true;
         }
 
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetToggleValue)), HarmonyPostfix]
         public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool isOn)
         {
             //Main.Instance.Log.LogMessage(__instance.NameKey);
-            switch(__instance.NameKey)
+            switch (__instance.NameKey)
             {
                 case "cep_personal_skin":
                     FraggleExpansionData.GhostBlocks = isOn;
                     MyXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = isOn.ToString();
                     MyXml.Instance.Save();
-                    SetPersonalSkin(isOn);
                     break;
                 case "cep_center_camera":
                     MyXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = isOn.ToString();
