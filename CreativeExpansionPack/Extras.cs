@@ -1,18 +1,17 @@
-using System.Net;
-using UnityEngine;
+using FG.Common.CMS;
 using Il2CppInterop.Common.Attributes;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.InteropTypes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppInterop.Runtime.Runtime;
 using Il2CppSystem;
-using Il2CppSystem.Collections;
-using Il2CppSystem.Collections.Generic;
 using Il2CppSystem.Text;
-using static RootMotion.FinalIK.RagdollUtility;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using UnityEngine;
+using static RootMotion.FinalIK.RagdollUtility;
 
 namespace FraggleExpansion
 {
@@ -29,8 +28,7 @@ namespace FraggleExpansion
 
     internal static class Tools
     {
-        static readonly string[] SizeSuffixes =
-                  { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        static readonly string[] SizeSuffixes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
         public static string SizeSuffix(int value, int decimalPlaces = 2, int decimalPlacesAfter = 2)
         {
@@ -38,7 +36,7 @@ namespace FraggleExpansion
             if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
 
             int i = 0;
-            double dValue = (double)value;
+            double dValue = value;
             while (Math.Round(dValue, decimalPlaces) >= 1000)
             {
                 dValue /= 1024;
@@ -61,13 +59,14 @@ namespace FraggleExpansion
             return null;
         }*/
 
-        public static System.Collections.Generic.List<GameObject> FindAllChildren(this Transform Parent, string Name)
+        public static List<GameObject> FindAllChildren(this Transform Parent, string Name)
         {
-            System.Collections.Generic.List<GameObject> listOfChildren = new System.Collections.Generic.List<GameObject>();
+            var listOfChildren = new List<GameObject>();
             foreach (Transform g in Parent.GetComponentsInChildren<Transform>(true))
                 if (g.name == Name) listOfChildren.Add(g.gameObject);
             return listOfChildren;
         }
+
         /*public static List<GameObject> FindAllChildren(this GameObject Parent, string Name)
         {
             List<GameObject> listOfChildren = new List<GameObject>();
@@ -96,5 +95,18 @@ namespace FraggleExpansion
             }
             return null;
         }*/
+
+        public static string LocalizeString(string key, string msg)
+        {
+            if (!CMSLoader.HasInstance) return msg;
+
+            var locStrings = CMSLoader.Instance._localisedStrings;
+            if (locStrings == null || locStrings._localisedStrings == null) return msg;
+
+            if (locStrings._localisedStrings.TryAdd(key, msg))
+                return key;
+
+            return msg;
+        }
     }
 }

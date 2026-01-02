@@ -229,20 +229,32 @@ namespace FraggleExpansion.Patches.Creative
                 //Main.Instance.CountStartLines(); // just so you won't have to hover a startline after loading a map
                 //Main.Instance.CountEndLines();
                 BugFixes.CacheAllObjectPlacedPosAndRot(); // ok, this doesn't help I think
+
                 var Btns = LevelEditorManager.Instance.UI._radialDefinition.RadialDefinitions;
-                Btns[6]._nameLocKey = "Lesser vertical & rotational step";
-                Btns[5]._nameLocKey = "Center Camera";
-                //Btns[2]._nameLocKey = "Ghost Blocks";
-                Btns[2]._nameLocKey = "Personal Skin";
-                Btns[4]._nameLocKey = "Links";
-                //Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
-                Btns[2]._descriptionLocKey = "When playtesting - use your own personal skin";
-                Btns[3]._descriptionLocKey = "Shift + Select = select all\nCtrl + Select = select all objects of the same type\nChrl + Shift + Select = select all objects of the same scale\n(console-key) ` + Select = select all in proximity\n` or 1 or 2 or 3 or 4 + DEselect = reset \\ + \\ - the proximity";
+
                 Btns[1].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value == "True"); // GridSnap
-                Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
+
+                //Btns[2]._nameLocKey = "Ghost Blocks";
+                //Btns[2]._descriptionLocKey = "Increase floor height via `R` key above 20 to make it ghost";
+
+                Btns[2]._nameLocKey = Tools.LocalizeString("cep_personal_skin", "Personal Skin");
+                Btns[2]._descriptionLocKey = Tools.LocalizeString("cep_personal_skin_desc", "When playtesting - use your own personal skin");
                 Btns[2].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True"); // Clipping
-                Btns[6].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/Precision").Value == "True"); // Precision
+
+                Btns[3]._descriptionLocKey = Tools.LocalizeString("cep_multi_select_desc", "Shift + Select = select all" +
+                    "\nCtrl + Select = select all objects of the same type" +
+                    "\nChrl + Shift + Select = select all objects of the same scale" +
+                    "\n(console-key) ` + Select = select all in proximity" +
+                    "\n` or 1 or 2 or 3 or 4 + DEselect = reset \\ + \\ - the proximity") ;
+
+                Btns[4]._nameLocKey = Tools.LocalizeString("cep_links", "Links");
                 Btns[4].SetMultiOptionValue(int.Parse(myXml.Instance.Data.XPathSelectElement("/States/Links")?.Value)); // Links
+
+                Btns[5]._nameLocKey = Tools.LocalizeString("cep_center_camera", "Center Camera");
+                Btns[5].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value == "True"); // CenterSelect
+
+                Btns[6]._nameLocKey = Tools.LocalizeString("cep_lesser", "Lesser vertical & rotational step");
+                Btns[6].SetToggleValue(myXml.Instance.Data.XPathSelectElement("/States/Precision").Value == "True"); // Precision
             }
         }
 
@@ -271,13 +283,13 @@ namespace FraggleExpansion.Patches.Creative
             //Main.Instance.Log.LogMessage(__instance.NameKey);
             switch(__instance.NameKey)
             {
-                case "Personal Skin":
+                case "cep_personal_skin":
                     FraggleExpansionData.GhostBlocks = isOn;
                     myXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = isOn.ToString();
                     myXml.Instance.Save();
                     SetPersonalSkin(isOn);
                     break;
-                case "Center Camera":
+                case "cep_center_camera":
                     myXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
@@ -285,7 +297,7 @@ namespace FraggleExpansion.Patches.Creative
                     myXml.Instance.Data.XPathSelectElement("/States/GridSnap").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
-                case "Lesser vertical & rotational step":
+                case "cep_lesser":
                     myXml.Instance.Data.XPathSelectElement("/States/Precision").Value = isOn.ToString();
                     myXml.Instance.Save();
                     break;
@@ -298,10 +310,10 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetMultiOptionValue)), HarmonyPostfix]
         public static void SetMultiOptionValue(LevelEditor_RadialMenuButtonDefinition __instance, int value = 0)
         {
-            //Main.Instance.Log.LogMessage(__instance.NameKey);
+            Main.Instance.Log.LogMessage(__instance.NameKey);
             switch (__instance.NameKey)
             {
-                case "Links":
+                case "cep_links":
                     myXml.Instance.Data.XPathSelectElement("/States/Links").Value = value.ToString();
                     myXml.Instance.Save();
                     break;
