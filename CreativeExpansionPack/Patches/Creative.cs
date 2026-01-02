@@ -310,7 +310,7 @@ namespace FraggleExpansion.Patches.Creative
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetMultiOptionValue)), HarmonyPostfix]
         public static void SetMultiOptionValue(LevelEditor_RadialMenuButtonDefinition __instance, int value = 0)
         {
-            Main.Instance.Log.LogMessage(__instance.NameKey);
+            //Main.Instance.Log.LogMessage(__instance.NameKey);
             switch (__instance.NameKey)
             {
                 case "cep_links":
@@ -440,23 +440,34 @@ namespace FraggleExpansion.Patches.Creative
     public class MainInit
     {
         static bool InitOnce = false;
-        [HarmonyPatch(typeof(MainMenuBackgroundViewModel), nameof(MainMenuBackgroundViewModel.SwitchBackground), new[] { typeof(TopBarMenuChangedEvent) }), HarmonyPostfix] // doesn't fire for the main menu but fires when you click any submenu later // only fires outside map editor when switching top bar tabs
-        public static void MenuLoad(MainMenuBackgroundViewModel __instance, TopBarMenuChangedEvent e)
+
+        //[HarmonyPatch(typeof(MainMenuBackgroundViewModel), nameof(MainMenuBackgroundViewModel.SwitchBackground), new[] { typeof(TopBarMenuChangedEvent) }), HarmonyPostfix] // doesn't fire for the main menu but fires when you click any submenu later // only fires outside map editor when switching top bar tabs
+
+        //instead of doing this via harmony patch we can use broadcaster to subscribe this method to OnMainMenuDisplayed event which fires each time you enter main menu
+        public static void MenuLoad(OnMainMenuDisplayed evt)
         {
             Main.Instance.Setup_done = false; // for SuperLateLoad after a map has loaded
+
             //Main.Instance.Log.LogMessage("MenuLoad name: " + __instance.name); // 3D Environment
-            if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false); }
-            if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
+
+            //if (GameObject.Find("BottomRight_Group")) { GameObject.Find("BottomRight_Group").SetActive(false); }
+            //if (GameObject.Find("SeasonPassButton")) { GameObject.Find("SeasonPassButton").SetActive(false); }
+
+            //avoid searching for object twice and instead using null propagation
+            GameObject.Find("BottomRight_Group")?.SetActive(false);
+            GameObject.Find("SeasonPassButton")?.SetActive(false);
             //if (GameObject.Find("ShopButton")) { GameObject.Find("ShopButton").SetActive(false); }
             //if (GameObject.Find("Generic_UI_PlayButton2_Prefab")) { GameObject.Find("Generic_UI_PlayButton2_Prefab").SetActive(false); }
+
             if (!InitOnce) // here comes a 2 sec lag, enjoy
             {
                 Main.Instance.LateLoad();
-                InitOnce = true;
                 if (!Main.Instance.Preprocessed)
                 {
                     Main.Instance.Preproccess_POD_prefabs();
                 }//  && (FraggleExpansionData.AddAllObjects || FraggleExpansionData.AddUnusedObjects)
+
+                InitOnce = true; //setting to true only after everything is completed
             }
         }
     }

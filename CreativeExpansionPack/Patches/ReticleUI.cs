@@ -7,6 +7,7 @@ namespace FraggleExpansion.Patches.Reticle
     public class ReticleUI
     {
         public static string level_size = "Objects"; //"";
+
         #region Budget Bar Modifications
         [HarmonyPatch(typeof(LevelEditorResourceBarViewModel), nameof(LevelEditorResourceBarViewModel.TotalPointsText), MethodType.Getter), HarmonyPrefix]
         public static bool ResourceBarTotalUsablePoints(out string __result)

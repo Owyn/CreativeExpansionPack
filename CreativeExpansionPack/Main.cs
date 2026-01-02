@@ -39,6 +39,7 @@ using System.Linq;
 using System.Text;
 using static UnityEngine.AddressableAssets.Utility.SerializationUtilities;
 using static Wushu.Framework.DebugDrawThreeJs;
+using Events;
 
 namespace FraggleExpansion
 {
@@ -53,8 +54,10 @@ namespace FraggleExpansion
         public override void Load()
         {
             Instance = this;
-            _Harmony.PatchAll(typeof(MainInit));
+            //_Harmony.PatchAll(typeof(MainInit));
+            Broadcaster.Instance.Register<OnMainMenuDisplayed>(new System.Action<OnMainMenuDisplayed>(MainInit.MenuLoad));
         }
+
         public void LateLoad()
         {
             //Log.LogMessage("Creative Expansion Pack CE 2.4");
@@ -517,11 +520,11 @@ namespace FraggleExpansion
         public bool Preprocessed = false;
         public void Preproccess_POD_prefabs()
         {
-            Preprocessed = true;
             try
             {
                 if (!AssetRegistry.Instance.Initialised) AssetRegistry.Instance.Initialise(true); // what does this arg do?
                 PlaceableObjectData LastOwner = null;
+
                 foreach (var el in AssetRegistry.Instance._registry.Keys) // can't go by GUID values cuz can't Ref error
                 {
                     AddressableLoadableAsset Loadable = AssetRegistry.Instance.LoadAsset(el);
@@ -537,6 +540,8 @@ namespace FraggleExpansion
                 }
             }
             catch (System.Exception e) { Log.LogMessage(e); }
+
+            Preprocessed = true; //setting Preprocessed flag only after loop ends
         }
 
         /*public void Dump_loaded_item_pod_names()
