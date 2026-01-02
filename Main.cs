@@ -42,7 +42,7 @@ using static Wushu.Framework.DebugDrawThreeJs;
 
 namespace FraggleExpansion
 {
-    [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "2.4")]
+    [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "47.0")]
     public class Main : BepInEx.Unity.IL2CPP.BasePlugin
     {
         public Harmony _Harmony = new Harmony("com.simp.fraggleexpansion");
@@ -69,6 +69,10 @@ namespace FraggleExpansion
             // Within Creative Patches
             _Harmony.PatchAll(typeof(MainFeaturePatches));
             _Harmony.PatchAll(typeof(FeaturesPatches));
+            /*if (FraggleExpansionData.UseMainSkinInExploreState) // breaks frequently
+            {
+                _Harmony.PatchAll(typeof(FeaturesPatchesSkin));
+            }*/
             _Harmony.PatchAll(typeof(BypassesPatches));
 
             // UI Stuff
