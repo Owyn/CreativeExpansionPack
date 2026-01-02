@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11312.210 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Creative Expansion Pack", "Creative Expansion Pack.csproj", "{2DC74E4F-EA9A-E127-A7C6-08B4CA53FAA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Creative Expansion Pack", "CreativeExpansionPack/Creative Expansion Pack.csproj", "{2DC74E4F-EA9A-E127-A7C6-08B4CA53FAA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
