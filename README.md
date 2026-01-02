@@ -1,6 +1,6 @@
 # Creative Expansion Pack Community Edition (CEP CE)
 
-![image](https://github.com/kota69th/CreativeExpansionPack/assets/104696918/44440c15-26de-4a5d-bab6-451845ef5f71)
+![image](Assets/logo.jpg)
 > A Fall Guys mod meant to improve Fall Guys Creative.
 
 
