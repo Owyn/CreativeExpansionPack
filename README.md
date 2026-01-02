@@ -3,7 +3,6 @@
 ![image](Assets/logo.jpg)
 > A Fall Guys mod meant to improve Fall Guys Creative.
 
-
 ## Questions and Answers
 
 **Is there a disc0rd for this mod?**
@@ -51,7 +50,7 @@ and some additional **new features** such as:
 > There's no reported case of a user of the mod getting banned during its private state, but the mod's creator has no implication if Mediatonic takes any actions on your account due to using the mod, use it at your own risk! With the whole nature of Fall Guys Creative and the implications of the mod, the question of if you can use Creative Expansion Pack is up to how much you value your account, even tho you are very unlikely of having to go through a ban if you play it safe...
 
 **Is Creative Expansion Pack against Fall Guys' EULA?**
-> After checking, Creative Expansion Pack **seems** to not **explicitly** be against Fall Guys' EULA, this mod doesn't give you a "competitive advantage" over a player playing a legitimate and unmodified copy of the game.‎
+> After checking, Creative Expansion Pack **seems** to not **explicitly** be against Fall Guys' EULA, this mod doesn't give you a "competitive advantage" over a player playing a legitimate and unmodified copy of the game.
 >
 > However, PLEASE MAKE GOOD USE OF CREATIVE EXPANSION PACK!!! This mod is clearly not a joke and has mad power over Fall Guys Creative, and everyone knows that with great power comes great responsibility.
 
@@ -83,6 +82,6 @@ and some additional **new features** such as:
 
 > MelonLoader for a tiny part of the code relating to Scenes.
 
-###### Honorable mention for the logo [here](https://pbs.twimg.com/media/F2jB2VDWYAAzmb1?format=png&name=small) (by Ocapa)
+###### Honorable mention for the logo by Ocapa
 ##
 ##### Not affiliated with Mediatonic.
