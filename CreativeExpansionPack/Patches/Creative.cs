@@ -1,10 +1,13 @@
 using BepInEx.Unity.IL2CPP.Utils;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using FG.Common;
 using FG.Common.CMS;
+using FG.Common.Fraggle;
 using FG.Common.LevelEditor.Serialization;
 using FG.Common.Loadables;
 using FG.Common.UGCNetworking;
 using FGClient;
+using FGClient.Rendering.XRay;
 using FMODUnity;
 using FraggleExpansion;
 using FraggleExpansion.Patches.Reticle;
@@ -18,6 +21,7 @@ using Il2CppSystem;
 using Il2CppSystem.Collections;
 using Il2CppSystem.Collections.Generic;
 using Il2CppSystem.Linq;
+using Il2CppSystem.Runtime.InteropServices;
 using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
 using Il2CppSystem.Text;
 using Il2CppSystem.Threading;
@@ -280,23 +284,6 @@ namespace FraggleExpansion.Patches.Creative
             //Main.Instance.Log.LogMessage("SetPersonalSkin(): " + isOn);
         }
 
-        [HarmonyPatch(typeof(LevelEditorStatePlay), nameof(LevelEditorStatePlay.InitializeLocalCharacter)), HarmonyPrefix]
-        public static bool InitializeLocalCharacter(LevelEditorStatePlay __instance)
-        {
-            SetPersonalSkin(MyXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True");
-
-            var handler = __instance._playerGameObject?.GetComponentInChildren<FallguyCustomisationHandler>();
-            if (handler == null) return true;
-
-            //not really best way of doing this but it works
-            handler.UpdateCostumeOption(LevelEditorManagerInstance._costumeTop, false);
-            handler.UpdateCostumeOption(LevelEditorManagerInstance._costumeBottom, false);
-            handler.UpdatePatternTexture(LevelEditorManagerInstance._costumeSkinPattern);
-            handler.UpdateColourOption(LevelEditorManagerInstance._colourOption);
-            handler.CheckAndUseOptimisedShadowShader(false);
-            return true;
-        }
-
         [HarmonyPatch(typeof(LevelEditor_RadialMenuButtonDefinition), nameof(LevelEditor_RadialMenuButtonDefinition.SetToggleValue)), HarmonyPostfix]
         public static void SetToggleValue(LevelEditor_RadialMenuButtonDefinition __instance, bool isOn)
         {
@@ -307,6 +294,8 @@ namespace FraggleExpansion.Patches.Creative
                     FraggleExpansionData.GhostBlocks = isOn;
                     MyXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value = isOn.ToString();
                     MyXml.Instance.Save();
+                    SetPersonalSkin(MyXml.Instance.Data.XPathSelectElement("/States/GhostBLocks").Value == "True");
+                    LevelEditorManagerInstance.MakeBean(); //recreating player with updated cosmetics
                     break;
                 case "cep_center_camera":
                     MyXml.Instance.Data.XPathSelectElement("/States/CameraCenter").Value = isOn.ToString();
