@@ -43,7 +43,7 @@ using Events;
 
 namespace FraggleExpansion
 {
-    [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "47.0")]
+    [BepInPlugin("FraggleExpansion", "Creative Expansion Pack CE", "48.0")]
     public class Main : BepInEx.Unity.IL2CPP.BasePlugin
     {
         public Harmony _Harmony = new("com.simp.fraggleexpansion");
@@ -407,6 +407,10 @@ namespace FraggleExpansion
                 bool attached = false;
                 string simpleName = Owner.name
                                     .Replace("POD_Inflatable_Vanilla_Wall_beta", "Inflatable")
+                                    .Replace("POD_Square_Vanilla", "POD_Triange") // why does this not group them? meh whatever
+                                    .Replace("POD_Square_Retro", "POD_Triange") // why does this not group them? meh whatever
+                                    .Replace("POD_SquaredPipeRetro_RETRO", "SquarePipe")
+                                    .Replace("POD_SquarePipeVanilla_VANILLA", "SquaredPipe")
                                     .Replace("POD_Drawable_Edge_Plain_Vanilla", "Curve")
                                     .Replace("POD_FloorStart_Survival_SpawnPoint_Vanilla", "Start")
                                     .Replace("POD_UI_Trigger_Volume", "POD_Trigger_Zone")
