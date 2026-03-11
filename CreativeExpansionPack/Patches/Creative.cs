@@ -564,7 +564,7 @@ namespace FraggleExpansion.Patches.Creative
                                    .Replace(",\"StartActive\":true", "")
                                    .Replace(",\"RespawnParam\":true", "")
                                    .Replace(",\"PointsAwarded\":1", "")
-                                   .Replace(",\"DelayParameter\":0.0", "")
+                                   //.Replace(",\"DelayParameter\":0.0", "") // if it's inside WaypointObjects[] - the map won't load
                                    .Replace(",\"EnableVFXParam\":true", "")
                                    .Replace(",\"EnableAudioParam\":true", "")
                                    .Replace(",\"CollisionEnabledParam\":true", "") // new stuff below, we can delete it cuz MT did some back-compat so old levels without it would still load with default values
@@ -579,6 +579,10 @@ namespace FraggleExpansion.Patches.Creative
                 __result = Regex.Replace(__result, ",\"(?!Level|Test|CollisionEnabledParam|EnableAudioParam|EnableVFXParam|RespawnParam|StartActive|DisableGroundObjectParam)([^\"])+\":false", ""); // del eveerything which is set to false except few exceptions
                 //Main.Instance.Log.LogMessage("\nafter json shrink:\n " + __result);
 
+                // fix what we broke before:
+                //__result = Regex.Replace(__result, "],(?<!\"DelayParameter\":0.0,)\"CurrentMovementSpeedParam\":", "],\"DelayParameter\":0.0,\"CurrentMovementSpeedParam\":");
+                //__result = __result.Replace("\"Independent\",\"CurrentScaleParam\"", "\"Independent\",\"DelayParameter\": 0.0,\"CurrentScaleParam\"");
+                //Main.Instance.Log.LogMessage("\nafter json shrink:\n " + __result);
                 //.Replace(",\"CurrentScaleParam\":\\[([^\\]])*\\]", "") // redundant stuff MT made up - we already delete this even without json shrinking
 
                 //__result = Regex.Replace(__result, "Theme ID\":\"[^\\\"]*", "Theme ID\":\"THEME_VANILLA");
