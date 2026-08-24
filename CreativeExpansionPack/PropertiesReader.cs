@@ -119,7 +119,7 @@ namespace FraggleExpansion
                     case "AddCustomObjects":
                         ReadBool(SplitData[1], ref ResultAsBoolean, FraggleExpansionData.AddUnusedObjects);
                         FraggleExpansionData.AddUnusedObjects = ResultAsBoolean;
-                        ReadObjectsToAddData();
+                        if(FraggleExpansionData.AddUnusedObjects) { ReadObjectsToAddData(); }
                         break;
 
                     case "AddAllObjects":
